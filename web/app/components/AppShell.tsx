@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { useAuth } from "@/lib/supabase/AuthContext";
 
@@ -16,7 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <Link className="brand" href="/"><span>✦</span> GuruKBC</Link>
+        <Link className="brand" href="/"><Image src="/gurukbc-logo.svg" alt="" width={28} height={28} priority />GuruKBC</Link>
         <p className="brand-subtitle">Administrasi guru yang terhubung</p>
         <nav aria-label="Navigasi utama">{sections.map((item) => <Link key={item.href} href={item.href} className="nav-link"><span>{item.icon}</span>{item.label}</Link>)}</nav>
         <div className="sidebar-footer">

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { AppShell } from "@/app/components/AppShell";
 import { PageHeader } from "@/app/components/PageHeader";

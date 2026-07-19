@@ -18,9 +18,8 @@ export default function TeacherPage() {
   });
 
   useEffect(() => {
-    storage.getItem<typeof form>("gurukbc-profile").then((stored) => {
-      if (stored && Object.keys(stored).length) setForm(stored);
-    });
+    const stored = storage.getItem<typeof form>("gurukbc-profile");
+    if (stored && Object.keys(stored).length) setForm(stored);
   }, []);
 
   const save = async () => {

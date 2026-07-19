@@ -6,12 +6,11 @@ import { storage } from "@/lib/supabase/storage";
 
 export default function SchoolPage() {
   const [saved, setSaved] = useState(false);
-  const [form, setForm] = useState({ name: "", npsn_nsm: "", headmaster_name: "", address: "" });
+  const [form, setForm] = useState({ name: "", npsn_nsm: "", headmaster_name: "", address: "", email: "" });
 
   useEffect(() => {
-    storage.getItem<typeof form>("gurukbc-school").then((stored) => {
-      if (stored && Object.keys(stored).length) setForm(stored);
-    });
+    const stored = storage.getItem<typeof form>("gurukbc-school");
+    if (stored && Object.keys(stored).length) setForm(stored);
   }, []);
 
   const save = async () => {

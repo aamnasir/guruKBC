@@ -392,7 +392,9 @@ create table public.generated_documents (
   school_id uuid references public.schools(id) on delete cascade,
   teacher_id uuid references public.profiles(id) on delete cascade,
   source_type text not null,
-  source_id uuid not null,
+  -- Some planning documents are persisted locally before they receive a database UUID.
+  -- Keep the source reference flexible so every generated document can be archived.
+  source_id text not null,
   version int not null default 1,
   label text,
   data jsonb not null,

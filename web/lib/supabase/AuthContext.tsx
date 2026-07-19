@@ -1,5 +1,6 @@
 "use client";
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "./client";
 import { signOut } from "./queries";
 import type { Profile } from "./types";
@@ -16,54 +17,43 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const refreshProfileRef = useRef<() => void>(() => {});
 
-  const doRefreshProfile = () => {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) {
-        setUser(null);
+  const refreshProfile = useCallback(() => {
+    void (async () => {
+      if (!supabase) {
+        setLoading(false);
         return;
       }
-      supabase.from("profiles").select("*").eq("id", session.user.id).single().then(({ data }) => {
-        setUser(data as Profile);
-      });
-    });
-  };
 
-  refreshProfileRef.current = () => {
-    refreshProfile();
-  };
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          setUser(null);
+          return;
+        }
+        const { data } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+        setUser(data as Profile | null);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
-    doRefreshProfile();
+    refreshProfile();
+    if (!supabase) return;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      doRefreshProfile();
+      refreshProfile();
     });
-
     return () => subscription.unsubscribe();
-  }, [supabase]);
-
-  const refreshProfile = () => {
-    if (refreshProfileRef.current) refreshProfileRef.current();
-  };
+  }, [refreshProfile]);
 
   const handleSignOut = async () => {
     await signOut();
     setUser(null);
     window.location.href = "/auth";
   };
-
-  useEffect(() => {
-    if (!loading) return;
-    if (user !== null) setLoading(false);
-  }, [loading, user]);
 
   return (
     <AuthContext.Provider value={{ user, loading, signOut: handleSignOut, refreshProfile }}>

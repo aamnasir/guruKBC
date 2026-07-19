@@ -4,6 +4,8 @@ import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 import { AppShell } from "@/app/components/AppShell";
 import { PageHeader } from "@/app/components/PageHeader";
 import { storage } from "@/lib/supabase/storage";
+import { useAuth } from "@/lib/supabase/AuthContext";
+import { createGeneratedDocument, getGeneratedDocuments } from "@/lib/supabase/queries";
 import styles from "./documents.module.css";
 
 type Stored = Record<string, unknown>;
@@ -326,6 +328,7 @@ function buildAssessmentDocx(data: Stored) {
 }
 
 export default function DocumentsPage() {
+  const { user } = useAuth();
   const [sources, setSources] = useState<Source[]>([]);
   const [archive, setArchive] = useState<ArchiveEntry[]>([]);
   const [selected, setSelected] = useState<Source | null>(null);
@@ -335,9 +338,38 @@ export default function DocumentsPage() {
   const totalVersions = useMemo(() => archive.length, [archive.length]);
 
   useEffect(() => {
-    sourceDocuments().then((docs) => { setSources(docs); setSelected(docs[0] ?? null); });
-    storage.getItem<{ entries?: ArchiveEntry[] }>(archiveKey).then((data) => setArchive(data.entries ?? []));
+    void Promise.resolve().then(async () => {
+      const [docs, archived] = await Promise.all([
+        sourceDocuments(),
+        Promise.resolve(storage.getItem<{ entries?: ArchiveEntry[] }>(archiveKey)),
+      ]);
+      setSources(docs);
+      setSelected(docs[0] ?? null);
+      setArchive(archived?.entries ?? []);
+    });
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    void getGeneratedDocuments(user.id).then(({ data, error }) => {
+      if (error || !data?.length) return;
+      const remoteEntries: ArchiveEntry[] = data.map((entry) => ({
+        id: entry.id,
+        sourceId: entry.source_id,
+        version: entry.version,
+        archivedAt: entry.created_at,
+        data: entry.data,
+        label: entry.label ?? undefined,
+      }));
+      setArchive((current) => {
+        const merged = [...current];
+        remoteEntries.forEach((entry) => {
+          if (!merged.some((item) => item.id === entry.id)) merged.push(entry);
+        });
+        return merged;
+      });
+    });
+  }, [user?.id]);
 
   const filteredSources = useMemo(() => {
     if (!search && filterType === "all") return sources;
@@ -348,9 +380,27 @@ export default function DocumentsPage() {
     });
   }, [sources, search, filterType]);
 
-  const archiveSource = (source: Source, label?: string) => {
+  const archiveSource = async (source: Source, label?: string) => {
     const version = archive.filter((item) => item.sourceId === source.id).length + 1;
-    const next = [...archive, { id: crypto.randomUUID(), sourceId: source.id, version, archivedAt: new Date().toISOString(), data: source.data, label }];
+    const localId = crypto.randomUUID();
+    const entry = { id: localId, sourceId: source.id, version, archivedAt: new Date().toISOString(), data: source.data, label };
+    let next = [...archive, entry];
+    storage.setItem(archiveKey, { entries: next });
+    setArchive(next);
+
+    if (!user?.school_id) return;
+    const { data, error } = await createGeneratedDocument({
+      school_id: user.school_id,
+      teacher_id: user.id,
+      source_type: source.type,
+      source_id: source.id,
+      version,
+      label: label ?? null,
+      data: source.data,
+      file_url: null,
+    });
+    if (error || !data) return;
+    next = next.map((item) => item.id === localId ? { ...item, id: data.id, archivedAt: data.created_at } : item);
     storage.setItem(archiveKey, { entries: next });
     setArchive(next);
   };
@@ -364,22 +414,62 @@ export default function DocumentsPage() {
   };
 
   const exportDocx = async (source: Source) => {
-    let document: Document;
-    switch (source.type) {
-      case "PROTA": document = buildProtaDocx(source.data); break;
-      case "PROMES": document = buildPromesDocx(source.data); break;
-      case "KKTP": document = buildKktpDocx(source.data); break;
-      case "MODUL": document = buildModuleDocx(source.data); break;
-      case "ASESMEN": document = buildAssessmentDocx(source.data); break;
-      default: document = new Document({ sections: [{ children: [new Paragraph({ text: source.title })] }] }); break;
+    try {
+      const response = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: source.type, data: source.data, format: "docx" }),
+      });
+      if (!response.ok) throw new Error("Export failed");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = window.document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${source.type.toLowerCase()}-gurukbc.docx`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("DOCX export error:", error);
+      // Fallback to local export
+      let document: Document;
+      switch (source.type) {
+        case "PROTA": document = buildProtaDocx(source.data); break;
+        case "PROMES": document = buildPromesDocx(source.data); break;
+        case "KKTP": document = buildKktpDocx(source.data); break;
+        case "MODUL": document = buildModuleDocx(source.data); break;
+        case "ASESMEN": document = buildAssessmentDocx(source.data); break;
+        default: document = new Document({ sections: [{ children: [new Paragraph({ text: source.title })] }] }); break;
+      }
+      const blob = await Packer.toBlob(document);
+      const url = URL.createObjectURL(blob);
+      const anchor = window.document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${source.type.toLowerCase()}-gurukbc.docx`;
+      anchor.click();
+      URL.revokeObjectURL(url);
     }
-    const blob = await Packer.toBlob(document);
-    const url = URL.createObjectURL(blob);
-    const anchor = window.document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${source.type.toLowerCase()}-gurukbc.docx`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  };
+
+  const exportPdf = async (source: Source) => {
+    try {
+      const response = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: source.type, data: source.data, format: "pdf" }),
+      });
+      if (!response.ok) throw new Error("PDF export failed");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = window.document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${source.type.toLowerCase()}-gurukbc.pdf`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("PDF export error:", error);
+      // Fallback to print dialog
+      printSource(source);
+    }
   };
 
   const printSource = (source: Source) => {
@@ -414,7 +504,7 @@ export default function DocumentsPage() {
 
   return (
     <AppShell>
-      <PageHeader eyebrow="DOKUMEN" title="Arsip perangkat pembelajaran" description="Kelola dokumen, simpan versi lokal, dan ekspor DOCX atau PDF." action={
+      <PageHeader eyebrow="DOKUMEN" title="Arsip perangkat pembelajaran" description="Kelola dokumen, simpan riwayat versi, dan ekspor DOCX atau PDF." action={
         <div className={styles.headerActions}>
           <input type="search" placeholder="Cari dokumen..." value={search} onChange={(e) => setSearch(e.target.value)} className={styles.search} />
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className={styles.filter}>
@@ -425,8 +515,8 @@ export default function DocumentsPage() {
       } />
       <section className={styles.summary}>
         <article><span>DOKUMEN TERSEDIA</span><strong>{sources.length}</strong><small>Perangkat tersimpan di perangkat ini</small></article>
-        <article><span>VERSI DIARSIPKAN</span><strong>{totalVersions}</strong><small>Snapshot dokumen yang dapat ditelusuri</small></article>
-        <article><span>FORMAT EKSPOR</span><strong>DOCX / PDF</strong><small>DOCX asli dan dialog cetak browser</small></article>
+        <article><span>VERSI DIARSIPKAN</span><strong>{totalVersions}</strong><small>Snapshot dokumen yang dapat dipulihkan</small></article>
+        <article><span>FORMAT EKSPOR</span><strong>DOCX / PDF</strong><small>Berkas siap unduh dalam dua format</small></article>
       </section>
       {filteredSources.length === 0 ? (
         <section className="empty-state">
@@ -446,15 +536,15 @@ export default function DocumentsPage() {
                     <p>{source.summary} · {formatDate(source.updatedAt)}</p>
                   </div>
                     <div className={styles.documentActions}>
-                      <button type="button" onClick={(event) => { event.stopPropagation(); archiveSource(source, "Versi manual"); }}>Arsipkan</button>
-                      <button type="button" className={styles.secondary} onClick={(event) => { event.stopPropagation(); exportDocx(source); }}>DOCX</button>
-                      <button type="button" className={styles.secondary} onClick={(event) => { event.stopPropagation(); printSource(source); }}>PDF</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); void archiveSource(source, "Versi manual"); }}>Arsipkan</button>
+                      <button type="button" className={styles.secondary} onClick={(event) => { event.stopPropagation(); void exportDocx(source); }}>DOCX</button>
+                      <button type="button" className={styles.secondary} onClick={(event) => { event.stopPropagation(); void exportPdf(source); }}>PDF</button>
                     </div>
                 </article>
               ))}
             </section>
             <section className={`panel ${styles.history}`}>
-              <div className="panel-title"><div><h2>Riwayat versi</h2><p>Snapshot tersimpan secara lokal pada perangkat ini.</p></div></div>
+              <div className="panel-title"><div><h2>Riwayat versi</h2><p>Snapshot disimpan di perangkat dan disinkronkan saat akun terhubung.</p></div></div>
               {archive.length === 0 ? <p className={styles.emptyHistory}>Belum ada versi yang diarsipkan.</p> : (
                 <ul>
                   {archive.slice().reverse().map((entry) => {
@@ -489,8 +579,8 @@ export default function DocumentsPage() {
                 </div>
                 <div className={styles.actions}>
                   <button className={`button ${styles.secondary}`} onClick={() => setSelectedArchive(null)}>Kembali</button>
-                  <button className="button button-primary" onClick={() => exportDocx({ ...selected!, data: selectedArchive.data })}>Unduh DOCX</button>
-                  <button className="button button-primary" onClick={() => printSource({ ...selected!, data: selectedArchive.data })}>Cetak PDF</button>
+                  <button className="button button-primary" onClick={() => void exportDocx({ ...selected!, data: selectedArchive.data })}>Unduh DOCX</button>
+                  <button className="button button-primary" onClick={() => void exportPdf({ ...selected!, data: selectedArchive.data })}>Unduh PDF</button>
                 </div>
               </>
             ) : selected ? (
@@ -502,9 +592,9 @@ export default function DocumentsPage() {
                   {renderPreview(selected)}
                 </div>
                 <div className={styles.actions}>
-                  <button className={`button ${styles.secondary}`} onClick={() => printSource(selected)}>Cetak / Simpan PDF</button>
+                  <button className={`button ${styles.secondary}`} onClick={() => exportPdf(selected)}>Unduh PDF</button>
                   <button className="button button-primary" onClick={() => void exportDocx(selected)}>Unduh DOCX</button>
-                  <button className={`button ${styles.secondary}`} onClick={() => archiveSource(selected, "Versi manual")}>Arsipkan versi</button>
+                  <button className={`button ${styles.secondary}`} onClick={() => void archiveSource(selected, "Versi manual")}>Arsipkan versi</button>
                 </div>
               </>
             ) : (
