@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Biarkan kosong, Next.js otomatis menyinkronkan data dari panel Vercel
 };
 
 export default nextConfig;
