@@ -1,0 +1,31 @@
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.next/
+.out/
+.cache/
+.vercel/
+.vercel/output/
+.env.local
+.env.development
+.env.test
+.env.production
+.vercel/output/
+.turbo/
+.cache/
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
