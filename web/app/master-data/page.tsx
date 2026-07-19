@@ -11,6 +11,8 @@ const records = [
   ["Mata Pelajaran & Kelas", "Penugasan mengajar dan peserta didik", "#", "Belum diisi"]
 ];
 
+export const dynamic = 'force-dynamic'; // <--- TAMBAHKAN INI
+
 export default function MasterDataPage() {
   return (
     <AppShell>
