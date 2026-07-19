@@ -1,0 +1,35 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { useAuth } from "@/lib/supabase/AuthContext";
+
+const sections = [
+  { label: "Dashboard", href: "/", icon: "⌂" },
+  { label: "Master Data", href: "/master-data", icon: "◫" },
+  { label: "Perencanaan", href: "/perencanaan", icon: "◷" },
+  { label: "Dokumen", href: "/dokumen", icon: "▤" },
+];
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const { user, signOut } = useAuth();
+  const initials = (user?.full_name ?? "G").slice(0, 2).toUpperCase();
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <Link className="brand" href="/"><span>✦</span> GuruKBC</Link>
+        <p className="brand-subtitle">Administrasi guru yang terhubung</p>
+        <nav aria-label="Navigasi utama">{sections.map((item) => <Link key={item.href} href={item.href} className="nav-link"><span>{item.icon}</span>{item.label}</Link>)}</nav>
+        <div className="sidebar-footer">
+          <span className="avatar">{initials}</span>
+          <div>
+            <strong>{user?.full_name ?? "Guru"}</strong>
+            <small>{user?.position ?? "Guru Mata Pelajaran"}</small>
+            {user?.role && <small style={{ textTransform: "capitalize" }}>{user.role.replace("_", " ")}</small>}
+            <button type="button" className="sign-out" onClick={signOut}>Keluar</button>
+          </div>
+        </div>
+      </aside>
+      <main className="main-content">{children}</main>
+    </div>
+  );
+}
