@@ -19,12 +19,18 @@ export default function AuthPage() {
   const isConfigured = Boolean(supabase);
 
   useEffect(() => {
+    console.log("supabase client:", supabase);
+    if (!supabase) {
+      console.error("Supabase client is null. Check environment variables.");
+      return;
+    }
     supabase?.auth.getSession().then(({ data: { session } }) => {
       if (session) window.location.href = "/";
     });
   }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
+    console.log("handleSubmit called, mode:", mode, "email:", email);
     event.preventDefault();
     if (!isConfigured) {
       setError("Layanan autentikasi belum dikonfigurasi. Lengkapi pengaturan Supabase terlebih dahulu.");
@@ -46,7 +52,17 @@ export default function AuthPage() {
         setMode("signin");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      console.error("Sign up/in error:", err);
+      let message = "Terjadi kesalahan";
+      if (err instanceof Error) {
+        message = err.message;
+        if (err.status) message += ` (Status: ${err.status})`;
+        if (err.error) message += ` - ${err.error}`;
+        if (err.message && err.message.includes("email")) {
+          message = "Gagal mendaftar. Pastikan email valid dan belum terdaftar.";
+        }
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
