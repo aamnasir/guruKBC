@@ -10,7 +10,7 @@ type Objective = { id: string; code: string; description: string; semester: 1 | 
 type WeekAnalysis = { year?: { name?: string }; weeks?: { semester: 1 | 2; estimatedHours?: number }[] };
 type ProtaData = { meta?: { subject?: string; grade?: string; year?: string }; objectives?: Objective[] };
 
-function readProta(): Promise<ProtaData> { return storage.getItem<ProtaData>("gurukbc-prota"); }
+function readProta(): ProtaData { return storage.getItem<ProtaData>("gurukbc-prota"); }
 
 export default function ProtaPage() {
   const [objectives, setObjectives] = useState<Objective[]>([]);
@@ -18,17 +18,16 @@ export default function ProtaPage() {
   const [saved, setSaved] = useState(false); const [error, setError] = useState("");
 
   useEffect(() => {
-    readProta().then((data) => {
+      const data = readProta();
       if (data.objectives?.length) { setObjectives(data.objectives); setMeta({ subject: data.meta?.subject ?? "", grade: data.meta?.grade ?? "", year: data.meta?.year ?? "2026/2027" }); }
-    });
-  }, []);
+    }, []);
 
   const [analysis] = useState<WeekAnalysis>({});
   const capacity = useMemo(() => ({ one: analysis.weeks?.filter((week) => week.semester === 1).reduce((total, week) => total + (week.estimatedHours ?? 0), 0) ?? 0, two: analysis.weeks?.filter((week) => week.semester === 2).reduce((total, week) => total + (week.estimatedHours ?? 0), 0) ?? 0 }), [analysis]);
   const required = { one: objectives.filter((item) => item.semester === 1).reduce((total, item) => total + item.hours, 0), two: objectives.filter((item) => item.semester === 2).reduce((total, item) => total + item.hours, 0) };
   function addObjective(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const description = String(data.get("description")).trim(); if (!description) return; setObjectives((items) => [...items, { id: crypto.randomUUID(), code: String(data.get("code")).trim() || `TP ${items.length + 1}`, description, semester: Number(data.get("semester")) as 1 | 2, hours: Math.max(1, Number(data.get("hours"))) }]); setSaved(false); setError(""); event.currentTarget.reset(); }
   function removeObjective(id: string) { setObjectives((items) => items.filter((item) => item.id !== id)); setSaved(false); }
-  const saveProta = async () => { if (!meta.subject.trim() || !meta.grade.trim() || objectives.length === 0) { setError("Lengkapi mata pelajaran, kelas, dan minimal satu tujuan pembelajaran."); return; } await storage.setItem("gurukbc-prota", { meta, objectives, updatedAt: new Date().toISOString() }); setError(""); setSaved(true); };
+  const saveProta = () => { if (!meta.subject.trim() || !meta.grade.trim() || objectives.length === 0) { setError("Lengkapi mata pelajaran, kelas, dan minimal satu tujuan pembelajaran."); return; } storage.setItem("gurukbc-prota", { meta, objectives, updatedAt: new Date().toISOString() }); setError(""); setSaved(true); };
   const balance = (semester: 1 | 2) => { const data = semester === 1 ? { required: required.one, capacity: capacity.one } : { required: required.two, capacity: capacity.two }; return data.capacity === 0 ? "Simpan Analisis Pekan Efektif untuk melihat kapasitas JP." : data.required <= data.capacity ? `Alokasi aman: sisa ${data.capacity - data.required} JP.` : `Kelebihan ${data.required - data.capacity} JP dari kapasitas.`; };
   return <AppShell><PageHeader eyebrow="PERENCANAAN / PROTA" title="Program Tahunan (PROTA)" description="Susun distribusi tujuan pembelajaran dan jam pelajaran untuk satu tahun ajaran." action={<div className={styles.actions}><button className={`button ${styles.secondary}`} onClick={() => window.print()}>Cetak / PDF</button><button className="button button-primary" onClick={saveProta}>Simpan PROTA</button></div>} />
     <section className={styles.layout}><div className={styles.editor}><section className="form-panel"><h2 className={styles.title}>Identitas perangkat</h2><div className="form-grid"><label>Mata pelajaran<input value={meta.subject} onChange={(event) => { setMeta({ ...meta, subject: event.target.value }); setSaved(false); }} placeholder="Contoh: Fikih" /></label><label>Kelas / fase<input value={meta.grade} onChange={(event) => { setMeta({ ...meta, grade: event.target.value }); setSaved(false); }} placeholder="Contoh: Kelas IV / Fase B" /></label><label className="full">Tahun pelajaran<input value={meta.year} onChange={(event) => { setMeta({ ...meta, year: event.target.value }); setSaved(false); }} /></label></div></section>

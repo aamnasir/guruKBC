@@ -11,7 +11,10 @@ import type {
 // ============================================
 
 export async function signUp(email: string, password: string, fullName: string) {
-  const { data, error } = await supabase!.auth.signUp({
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { full_name: fullName } },
@@ -20,37 +23,58 @@ export async function signUp(email: string, password: string, fullName: string) 
 }
 
 export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase!.auth.signInWithPassword({ email, password });
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   return { data, error };
 }
 
 export async function signOut() {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   if (!supabase) return { error: null };
   const { error } = await supabase.auth.signOut();
   return { error };
 }
 
 export async function getSession() {
-  const { data: { session } } = await supabase!.auth.getSession();
+  if (!supabase) {
+    return null;
+  }
+  const { data: { session } } = await supabase.auth.getSession();
   return session;
 }
 
 export async function getUser() {
-  const { data: { user } } = await supabase!.auth.getUser();
+  if (!supabase) {
+    return null;
+  }
+  const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
 
 export async function resetPassword(email: string) {
-  const { data, error } = await supabase!.auth.resetPasswordForEmail(email);
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email);
   return { data, error };
 }
 
 export async function updatePassword(newPassword: string) {
-  const { data, error } = await supabase!.auth.updateUser({ password: newPassword });
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
+  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
   return { data, error };
 }
 
 export async function updateProfile(updates: Partial<Profile>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("profiles").update(updates).eq("id", (await getUser())?.id).select().single();
   return { data, error };
 }
@@ -60,26 +84,41 @@ export async function updateProfile(updates: Partial<Profile>) {
 // ============================================
 
 export async function getSchools() {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("schools").select("*").order("name");
   return { data, error };
 }
 
 export async function getSchool(id: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("schools").select("*").eq("id", id).single();
   return { data, error };
 }
 
 export async function createSchool(school: Omit<School, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("schools").insert(school).select().single();
   return { data, error };
 }
 
 export async function updateSchool(id: string, updates: Partial<School>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("schools").update(updates).eq("id", id).select().single();
   return { data, error };
 }
 
 export async function deleteSchool(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("schools").delete().eq("id", id);
   return { error };
 }
@@ -89,26 +128,41 @@ export async function deleteSchool(id: string) {
 // ============================================
 
 export async function getAcademicYears(schoolId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("academic_years").select("*").eq("school_id", schoolId).order("start_date", { ascending: false });
   return { data, error };
 }
 
 export async function getActiveAcademicYear(schoolId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("academic_years").select("*").eq("school_id", schoolId).eq("is_active", true).single();
   return { data, error };
 }
 
 export async function createAcademicYear(year: Omit<AcademicYear, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("academic_years").insert(year).select().single();
   return { data, error };
 }
 
 export async function updateAcademicYear(id: string, updates: Partial<AcademicYear>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("academic_years").update(updates).eq("id", id).select().single();
   return { data, error };
 }
 
 export async function deleteAcademicYear(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("academic_years").delete().eq("id", id);
   return { error };
 }
@@ -118,21 +172,33 @@ export async function deleteAcademicYear(id: string) {
 // ============================================
 
 export async function getSubjects(schoolId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("subjects").select("*").eq("school_id", schoolId).order("name");
   return { data, error };
 }
 
 export async function createSubject(subject: Omit<Subject, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("subjects").insert(subject).select().single();
   return { data, error };
 }
 
 export async function updateSubject(id: string, updates: Partial<Subject>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("subjects").update(updates).eq("id", id).select().single();
   return { data, error };
 }
 
 export async function deleteSubject(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("subjects").delete().eq("id", id);
   return { error };
 }
@@ -142,23 +208,35 @@ export async function deleteSubject(id: string) {
 // ============================================
 
 export async function getClasses(schoolId: string, academicYearId?: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   let query = supabase!.from("classes").select("*").eq("school_id", schoolId);
   if (academicYearId) query = query.eq("academic_year_id", academicYearId);
-  const { data, error } = query.order("name");
+  const { data, error } = await query.order("name");
   return { data, error };
 }
 
 export async function createSubjectClass(klass: Omit<Class, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("classes").insert(klass).select().single();
   return { data, error };
 }
 
 export async function updateSubjectClass(id: string, updates: Partial<Class>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("classes").update(updates).eq("id", id).select().single();
   return { data, error };
 }
 
 export async function deleteSubjectClass(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("classes").delete().eq("id", id);
   return { error };
 }
@@ -168,21 +246,33 @@ export async function deleteSubjectClass(id: string) {
 // ============================================
 
 export async function getTeacherClasses(teacherId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("teacher_classes").select("*, class:classes(*), subject:subjects(*)").eq("teacher_id", teacherId);
   return { data, error };
 }
 
 export async function createTeacherClass(assignment: Omit<TeacherClass, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("teacher_classes").insert(assignment).select().single();
   return { data, error };
 }
 
 export async function updateTeacherClass(id: string, updates: Partial<TeacherClass>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("teacher_classes").update(updates).eq("id", id).select().single();
   return { data, error };
 }
 
 export async function deleteTeacherClass(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("teacher_classes").delete().eq("id", id);
   return { error };
 }
@@ -192,23 +282,35 @@ export async function deleteTeacherClass(id: string) {
 // ============================================
 
 export async function getStudents(schoolId: string, classId?: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   let query = supabase!.from("students").select("*").eq("school_id", schoolId);
   if (classId) query = query.eq("class_id", classId);
-  const { data, error } = query.order("full_name");
+  const { data, error } = await query.order("full_name");
   return { data, error };
 }
 
 export async function createStudent(student: Omit<Student, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("students").insert(student).select().single();
   return { data, error };
 }
 
 export async function updateStudent(id: string, updates: Partial<Student>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("students").update(updates).eq("id", id).select().single();
   return { data, error };
 }
 
 export async function deleteStudent(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("students").delete().eq("id", id);
   return { error };
 }
@@ -218,21 +320,33 @@ export async function deleteStudent(id: string) {
 // ============================================
 
 export async function getAcademicCalendar(schoolId: string, academicYearId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("academic_calendar").select("*").eq("school_id", schoolId).eq("academic_year_id", academicYearId).order("date");
   return { data, error };
 }
 
 export async function createCalendarEntry(entry: Omit<AcademicCalendarEntry, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("academic_calendar").insert(entry).select().single();
   return { data, error };
 }
 
 export async function updateCalendarEntry(id: string, updates: Partial<AcademicCalendarEntry>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("academic_calendar").update(updates).eq("id", id).select().single();
   return { data, error };
 }
 
 export async function deleteCalendarEntry(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("academic_calendar").delete().eq("id", id);
   return { error };
 }
@@ -242,11 +356,17 @@ export async function deleteCalendarEntry(id: string) {
 // ============================================
 
 export async function getEffectiveDays(schoolId: string, academicYearId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("effective_days").select("*").eq("school_id", schoolId).eq("academic_year_id", academicYearId).order("month");
   return { data, error };
 }
 
 export async function upsertEffectiveDay(day: Omit<EffectiveDay, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("effective_days").upsert(day, { onConflict: "school_id,academic_year_id,month" }).select().single();
   return { data, error };
 }
@@ -256,11 +376,17 @@ export async function upsertEffectiveDay(day: Omit<EffectiveDay, "id" | "created
 // ============================================
 
 export async function getEffectiveWeeks(schoolId: string, academicYearId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("effective_weeks").select("*").eq("school_id", schoolId).eq("academic_year_id", academicYearId).order("week_number");
   return { data, error };
 }
 
 export async function upsertEffectiveWeek(week: Omit<EffectiveWeek, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("effective_weeks").upsert(week, { onConflict: "school_id,academic_year_id,week_number,semester" }).select().single();
   return { data, error };
 }
@@ -270,21 +396,33 @@ export async function upsertEffectiveWeek(week: Omit<EffectiveWeek, "id" | "crea
 // ============================================
 
 export async function getLearningObjectives(teacherId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("learning_objectives").select("*").eq("teacher_id", teacherId).order("semester");
   return { data, error };
 }
 
 export async function createLearningObjective(objective: Omit<LearningObjective, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("learning_objectives").insert(objective).select().single();
   return { data, error };
 }
 
 export async function updateLearningObjective(id: string, updates: Partial<LearningObjective>) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("learning_objectives").update(updates).eq("id", id).select().single();
   return { data, error };
 }
 
 export async function deleteLearningObjective(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("learning_objectives").delete().eq("id", id);
   return { error };
 }
@@ -294,11 +432,17 @@ export async function deleteLearningObjective(id: string) {
 // ============================================
 
 export async function getProta(teacherId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("prota").select("*").eq("teacher_id", teacherId).single();
   return { data, error };
 }
 
 export async function upsertProta(prota: Omit<Prota, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("prota").upsert(prota).select().single();
   return { data, error };
 }
@@ -308,11 +452,17 @@ export async function upsertProta(prota: Omit<Prota, "id" | "created_at" | "upda
 // ============================================
 
 export async function getPromes(teacherId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("promes").select("*").eq("teacher_id", teacherId).single();
   return { data, error };
 }
 
 export async function upsertPromes(promes: Omit<Promes, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("promes").upsert(promes).select().single();
   return { data, error };
 }
@@ -322,11 +472,17 @@ export async function upsertPromes(promes: Omit<Promes, "id" | "created_at" | "u
 // ============================================
 
 export async function getKktp(teacherId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("kktp").select("*").eq("teacher_id", teacherId).single();
   return { data, error };
 }
 
 export async function upsertKktp(kktp: Omit<Kktp, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("kktp").upsert(kktp).select().single();
   return { data, error };
 }
@@ -336,11 +492,17 @@ export async function upsertKktp(kktp: Omit<Kktp, "id" | "created_at" | "updated
 // ============================================
 
 export async function getTeachingModules(teacherId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("teaching_modules").select("*").eq("teacher_id", teacherId).single();
   return { data, error };
 }
 
 export async function upsertTeachingModule(module: Omit<TeachingModule, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("teaching_modules").upsert(module).select().single();
   return { data, error };
 }
@@ -350,11 +512,17 @@ export async function upsertTeachingModule(module: Omit<TeachingModule, "id" | "
 // ============================================
 
 export async function getAssessments(teacherId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("assessments").select("*").eq("teacher_id", teacherId).single();
   return { data, error };
 }
 
 export async function upsertAssessment(assessment: Omit<Assessment, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("assessments").upsert(assessment).select().single();
   return { data, error };
 }
@@ -364,16 +532,25 @@ export async function upsertAssessment(assessment: Omit<Assessment, "id" | "crea
 // ============================================
 
 export async function getGeneratedDocuments(teacherId: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("generated_documents").select("*").eq("teacher_id", teacherId).order("created_at", { ascending: false });
   return { data, error };
 }
 
 export async function createGeneratedDocument(doc: Omit<GeneratedDocument, "id" | "created_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("generated_documents").insert(doc).select().single();
   return { data, error };
 }
 
 export async function deleteGeneratedDocument(id: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.from("generated_documents").delete().eq("id", id);
   return { error };
 }
@@ -383,11 +560,17 @@ export async function deleteGeneratedDocument(id: string) {
 // ============================================
 
 export async function createAuditLog(log: Omit<AuditLog, "id" | "created_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("audit_logs").insert(log).select().single();
   return { data, error };
 }
 
 export async function getAuditLogs(schoolId: string, limit = 100) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("audit_logs").select("*").eq("school_id", schoolId).order("created_at", { ascending: false }).limit(limit);
   return { data, error };
 }
@@ -397,29 +580,44 @@ export async function getAuditLogs(schoolId: string, limit = 100) {
 // ============================================
 
 export async function uploadSchoolAsset(bucket: string, path: string, file: File) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.storage.from(bucket).upload(path, file, { upsert: true });
   return { data, error };
 }
 
 export async function getSchoolAssetUrl(bucket: string, path: string) {
+  if (!supabase) {
+    return null;
+  }
   const { data } = supabase!.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
 }
 
 export async function deleteSchoolAsset(bucket: string, path: string) {
+  if (!supabase) {
+    return { error: new Error('Supabase client is not initialized') };
+  }
   const { error } = await supabase!.storage.from(bucket).remove([path]);
   return { error };
 }
 
 export async function createSchoolAsset(asset: Omit<SchoolAsset, "id" | "created_at" | "updated_at">) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   const { data, error } = await supabase!.from("school_assets").insert(asset).select().single();
   return { data, error };
 }
 
 export async function getSchoolAssets(schoolId: string, assetType?: string) {
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not initialized') };
+  }
   let query = supabase!.from("school_assets").select("*").eq("school_id", schoolId);
   if (assetType) query = query.eq("asset_type", assetType);
-  const { data, error } = query.order("created_at", { ascending: false });
+  const { data, error } = await query.order("created_at", { ascending: false });
   return { data, error };
 }
 
@@ -432,15 +630,41 @@ export function subscribeToTable<T>(
   callback: (payload: { eventType: string; new: T; old: T | null }) => void,
   filter?: string
 ) {
-  if (!supabase) return { unsubscribe: () => {} };
-  const channel = supabase
-    .channel(`public:${table}`)
-    .on("postgres_changes", { event: "*", schema: "public", table, ...(filter ? { filter } : {}) }, callback)
-    .subscribe();
-  return { unsubscribe: () => supabase.removeChannel(channel) };
+  if (!supabase) {
+    return { unsubscribe: () => {} };
+  }
+  // 1. Ambil fungsi callback yang seharusnya menangani data perubahan (misal: callback)
+// Jika fungsi ini berada di dalam pembungkus, pastikan argumen callback dilewatkan ke fungsi utama Anda.
+const channel = supabase
+  .channel(`public:${table}`)
+  .on(
+    "postgres_changes", 
+    { 
+      event: "*", 
+      schema: "public", 
+      table, 
+      ...(filter ? { filter } : {}) 
+    }, 
+    (payload) => {
+      // MASUKKAN/SESUAIKAN LOGIKA ANDA DI SINI
+      // Contoh: jika fungsi utama menerima argumen callback, panggil di sini:
+      // if (typeof callback === 'function') callback(payload);
+    }
+  )
+  .subscribe();
+
+return { 
+  unsubscribe: () => {
+    if (supabase) supabase.removeChannel(channel);
+  } 
+};
+
 }
 
 export async function subscribeToProfile(callback: (profile: Profile | null) => void) {
+  if (!supabase) {
+    return { unsubscribe: () => {} };
+  }
   const userId = (await getUser())?.id;
   return subscribeToTable<Profile>("profiles", (payload) => {
     if (payload.eventType === "UPDATE" || payload.eventType === "INSERT") callback(payload.new as Profile);

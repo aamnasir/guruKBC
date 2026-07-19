@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, useEffect } from "react";
 import { AppShell } from "@/app/components/AppShell";
 import { PageHeader } from "@/app/components/PageHeader";
 import { storage } from "@/lib/supabase/storage";
@@ -17,16 +17,18 @@ export default function AcademicCalendarPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
-  useState(() => {
-    storage.getItem<{ events: CalendarEvent[]; year: typeof year }>("gurukbc-academic-calendar").then((data) => {
-      if (data) { setEvents(data.events ?? []); setYear(data.year ?? year); }
-    });
-  });
+  useEffect(() => {
+    const data = storage.getItem<{ events: CalendarEvent[]; year: typeof year }>("gurukbc-academic-calendar");
+    if (data) { setEvents(data.events ?? []); setYear(data.year ?? year); }
+  }, []);
 
   const effectiveDays = useMemo(() => countWeekdays(year.start, year.end, events), [events, year.end, year.start]);
   const holidays = events.filter((event) => event.type === "Libur").length;
   const updateYear = (key: "name" | "start" | "end", value: string) => { setYear({ ...year, [key]: value }); setSaved(false); };
-  const saveCalendar = async () => { await storage.setItem("gurukbc-academic-calendar", { events, year }); setSaved(true); };
+  const saveCalendar = () => {
+    storage.setItem("gurukbc-academic-calendar", { events, year });
+    setSaved(true);
+  };
   function addEvent(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const form = new FormData(event.currentTarget); const startDate = String(form.get("startDate")); const endDate = String(form.get("endDate")); if (endDate < startDate) { setError("Tanggal selesai tidak boleh lebih awal dari tanggal mulai."); return; } setEvents((current) => [...current, { id: crypto.randomUUID(), title: String(form.get("title")).trim(), type: String(form.get("type")) as CalendarEvent["type"], startDate, endDate }].sort((a, b) => a.startDate.localeCompare(b.startDate))); setError(""); setSaved(false); event.currentTarget.reset(); }
   return <AppShell><PageHeader eyebrow="PERENCANAAN / KALENDER AKADEMIK" title="Kalender Akademik" description="Tetapkan periode belajar, hari libur, dan kegiatan sekolah sebagai dasar analisis hari efektif." />
     <section className={styles.summary} aria-label="Ringkasan kalender"><article><span>TAHUN PELAJARAN</span><strong>{year.name}</strong><small>{formatDate(year.start)} - {formatDate(year.end)}</small></article><article><span>ESTIMASI HARI EFEKTIF</span><strong>{effectiveDays}</strong><small>Senin-Jumat, di luar hari libur</small></article><article><span>HARI LIBUR TERCATAT</span><strong>{holidays}</strong><small>{events.length} agenda dalam kalender</small></article></section>

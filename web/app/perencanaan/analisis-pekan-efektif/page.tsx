@@ -25,11 +25,11 @@ export default function EffectiveWeeksPage() {
   const [weeklyHours, setWeeklyHours] = useState(6);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    storage.getItem<CalendarData>("gurukbc-academic-calendar").then((data) => {
-      if (data) setCalendar(data);
-    });
-  }, []);
+ useEffect(() => {
+  const data = storage.getItem<CalendarData>("gurukbc-academic-calendar");
+  if (data) setCalendar(data);
+}, []);
+
 
   const weeks = useMemo(() => calculateWeeks(calendar), [calendar]);
   const estimatedHours = (week: Week) => Math.round((week.effectiveDays / 5) * weeklyHours);

@@ -12,7 +12,7 @@ type EffectiveWeek = { number: number; semester: 1 | 2; estimatedHours?: number;
 type WeekData = { weeks?: EffectiveWeek[] };
 type Allocation = { weekNumber: number; semester: 1 | 2; objectiveId: string; code: string; description: string; hours: number };
 
-function readStorage<T>(key: string): Promise<T> { return storage.getItem<T>(key); }
+function readStorage<T>(key: string): T { return storage.getItem<T>(key); }
 function validObjectives(value: ProtaData["objectives"]): Objective[] { return Array.isArray(value) ? value.filter((item): item is Objective => Boolean(item?.id && item.code && item.description && (item.semester === 1 || item.semester === 2) && Number.isFinite(item.hours) && item.hours > 0)) : []; }
 function validWeeks(value: WeekData["weeks"]): EffectiveWeek[] { return Array.isArray(value) ? value.filter((item): item is EffectiveWeek => Boolean(Number.isFinite(item?.number) && (item.semester === 1 || item.semester === 2) && Number.isFinite(item.estimatedHours) && (item.estimatedHours ?? 0) > 0)) : []; }
 
@@ -28,17 +28,17 @@ export default function PromesPage() {
   const [analysis, setAnalysis] = useState<WeekData>({});
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    readStorage<ProtaData>("gurukbc-prota").then((data) => setProta(data));
-    readStorage<WeekData>("gurukbc-effective-weeks").then((data) => setAnalysis(data));
-  }, []);
+useEffect(() => {
+     setProta(readStorage<ProtaData>("gurukbc-prota"));
+     setAnalysis(readStorage<WeekData>("gurukbc-effective-weeks"));
+   }, []);
 
   const objectives = useMemo(() => validObjectives(prota.objectives), [prota.objectives]);
   const weeks = useMemo(() => validWeeks(analysis.weeks).sort((a, b) => a.number - b.number), [analysis.weeks]);
   const result = useMemo(() => distribute(objectives, weeks), [objectives, weeks]);
   const semesterRows = (semester: 1 | 2) => result.allocations.filter((item) => item.semester === semester);
   const totalHours = result.allocations.reduce((total, item) => total + item.hours, 0);
-  const savePromes = async () => { if (!objectives.length || !weeks.length || result.unallocated.length) return; await storage.setItem("gurukbc-promes", { meta: prota.meta, allocations: result.allocations, createdAt: new Date().toISOString() }); setSaved(true); };
+  const savePromes = () => { if (!objectives.length || !weeks.length || result.unallocated.length) return; storage.setItem("gurukbc-promes", { meta: prota.meta, allocations: result.allocations, createdAt: new Date().toISOString() }); setSaved(true); };
   const table = (semester: 1 | 2) => <section className={`panel ${styles.tablePanel}`}><div className="panel-title"><div><h2>Semester {semester}</h2><p>{semesterRows(semester).length} distribusi TP pada pekan efektif.</p></div></div><div className={styles.tableWrap}><table><thead><tr><th>Pekan</th><th>Tujuan Pembelajaran</th><th>Alokasi JP</th></tr></thead><tbody>{semesterRows(semester).length === 0 ? <tr><td colSpan={3} className={styles.placeholder}>Belum ada alokasi semester {semester}.</td></tr> : semesterRows(semester).map((item, index) => <tr key={`${item.objectiveId}-${item.weekNumber}-${index}`}><td>{item.weekNumber}</td><td><b>{item.code}</b><span>{item.description}</span></td><td>{item.hours}</td></tr>)}</tbody></table></div></section>;
   const hasPrerequisites = objectives.length > 0 && weeks.length > 0;
   return <AppShell><PageHeader eyebrow="PERENCANAAN / PROMES" title="Program Semester (PROMES)" description="Distribusikan tujuan pembelajaran dari PROTA ke pekan efektif secara otomatis." action={<div className={styles.actions}><button className={`button ${styles.secondary}`} onClick={() => window.print()} disabled={!hasPrerequisites}>Cetak / PDF</button><button className="button button-primary" onClick={savePromes} disabled={!hasPrerequisites || result.unallocated.length > 0}>Simpan PROMES</button></div>} />

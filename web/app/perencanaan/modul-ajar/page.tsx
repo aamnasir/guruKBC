@@ -12,7 +12,7 @@ type Criterion = { objectiveId: string; technique: string; minimum: number; desc
 type KktpData = { criteria?: Criterion[] };
 type ModuleData = { objectiveId: string; title: string; meetings: number; model: string; initialCompetency: string; meaningfulUnderstanding: string; triggerQuestion: string; learningActivities: string; assessment: string };
 
-function readStorage<T>(key: string): Promise<T> { return storage.getItem<T>(key); }
+function readStorage<T>(key: string): T { return storage.getItem<T>(key); }
 function validObjectives(value: ProtaData["objectives"]): Objective[] { return Array.isArray(value) ? value.filter((item): item is Objective => Boolean(item?.id && item.code && item.description && (item.semester === 1 || item.semester === 2))) : []; }
 
 export default function TeachingModulePage() {
@@ -22,8 +22,8 @@ export default function TeachingModulePage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    readStorage<ProtaData>("gurukbc-prota").then((data) => setProta(data));
-    readStorage<KktpData>("gurukbc-kktp").then((data) => setKktp(data));
+    setProta(readStorage<ProtaData>("gurukbc-prota"));
+    setKktp(readStorage<KktpData>("gurukbc-kktp"));
   }, []);
 
   const objectives = useMemo(() => validObjectives(prota.objectives), [prota.objectives]);
@@ -32,7 +32,13 @@ export default function TeachingModulePage() {
   const hasPrerequisites = objectives.length > 0 && Boolean(criterion);
   const update = <K extends keyof ModuleData>(key: K, value: ModuleData[K]) => { setModule((current) => ({ ...current, [key]: value })); setSaved(false); };
   const selectObjective = (objectiveId: string) => { const objective = objectives.find((item) => item.id === objectiveId); setModule((current) => ({ ...current, objectiveId, title: objective ? `Modul Ajar ${objective.code}` : current.title, meaningfulUnderstanding: objective ? `Peserta didik memahami dan mampu menerapkan: ${objective.description}` : current.meaningfulUnderstanding })); setSaved(false); };
-  const saveModule = async () => { if (!hasPrerequisites || !module.title.trim() || !module.learningActivities.trim()) return; const existing = await readStorage<{ modules?: ModuleData[] }>("gurukbc-teaching-modules"); const modules = [...(existing.modules ?? []).filter((item) => item.objectiveId !== module.objectiveId), module]; await storage.setItem("gurukbc-teaching-modules", { meta: prota.meta, modules, updatedAt: new Date().toISOString() }); setSaved(true); };
+  const saveModule = () => {
+    if (!hasPrerequisites || !module.title.trim() || !module.learningActivities.trim()) return;
+    const existing = readStorage<{ modules?: ModuleData[] }>("gurukbc-teaching-modules");
+    const modules = [...(existing.modules ?? []).filter((item) => item.objectiveId !== module.objectiveId), module];
+    storage.setItem("gurukbc-teaching-modules", { meta: prota.meta, modules, updatedAt: new Date().toISOString() });
+    setSaved(true);
+  };
   return <AppShell><PageHeader eyebrow="PERENCANAAN / MODUL AJAR KBC" title="Modul Ajar Deep Learning KBC" description="Rangkai modul ajar dari tujuan pembelajaran, jadwal PROMES, dan KKTP." action={<div className={styles.actions}><button className={`button ${styles.secondary}`} onClick={() => window.print()} disabled={!hasPrerequisites}>Cetak / PDF</button><button className="button button-primary" onClick={saveModule} disabled={!hasPrerequisites}>Simpan Modul</button></div>} />
     {!hasPrerequisites ? <section className={`empty-state ${styles.notice}`}><h2>Data TP atau KKTP belum tersedia.</h2><p>Simpan PROTA, PROMES, dan KKTP terlebih dahulu untuk membuat Modul Ajar yang terhubung.</p></section> : <section className={styles.layout}><div className={styles.editor}><section className="form-panel"><h2 className={styles.title}>Identitas modul</h2><div className="form-grid"><label className="full">Tujuan pembelajaran<select value={module.objectiveId} onChange={(event) => selectObjective(event.target.value)}>{objectives.map((item) => <option value={item.id} key={item.id}>{item.code} — {item.description}</option>)}</select></label><label className="full">Judul modul<input value={module.title} onChange={(event) => update("title", event.target.value)} /></label><label>Jumlah pertemuan<input type="number" min="1" max="24" value={module.meetings} onChange={(event) => update("meetings", Math.max(1, Number(event.target.value)))} /></label><label>Model pembelajaran<select value={module.model} onChange={(event) => update("model", event.target.value)}><option>Pembelajaran Berbasis Proyek</option><option>Pembelajaran Berbasis Masalah</option><option>Inkuiri Terbimbing</option><option>Kooperatif</option></select></label></div></section>
       <section className="form-panel"><h2 className={styles.title}>Desain pembelajaran bermakna</h2><div className="form-grid"><label className="full">Kompetensi awal<textarea rows={3} value={module.initialCompetency} onChange={(event) => update("initialCompetency", event.target.value)} /></label><label className="full">Pemahaman bermakna<textarea rows={3} value={module.meaningfulUnderstanding} onChange={(event) => update("meaningfulUnderstanding", event.target.value)} /></label><label className="full">Pertanyaan pemantik<textarea rows={2} value={module.triggerQuestion} onChange={(event) => update("triggerQuestion", event.target.value)} /></label><label className="full">Langkah kegiatan pembelajaran<textarea rows={6} value={module.learningActivities} onChange={(event) => update("learningActivities", event.target.value)} /></label><label className="full">Asesmen<textarea rows={3} value={module.assessment} onChange={(event) => update("assessment", event.target.value)} /></label></div></section></div>

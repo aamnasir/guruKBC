@@ -55,13 +55,18 @@ export default function AuthPage() {
       console.error("Sign up/in error:", err);
       let message = "Terjadi kesalahan";
       if (err instanceof Error) {
-        message = err.message;
-        if (err.status) message += ` (Status: ${err.status})`;
-        if (err.error) message += ` - ${err.error}`;
-        if (err.message && err.message.includes("email")) {
-          message = "Gagal mendaftar. Pastikan email valid dan belum terdaftar.";
-        }
-      }
+  message = err.message;
+  
+  // Menggunakan type assertion (err as any) agar TypeScript mengizinkan akses ke properti kustom
+  const errorObj = err as any;
+  if (errorObj.status) message += ` (Status: ${errorObj.status})`;
+  if (errorObj.error) message += ` - ${errorObj.error}`;
+  
+  if (err.message && err.message.includes("email")) {
+    message = "Gagal mendaftar. Pastikan email valid dan belum terdaftar.";
+  }
+}
+
       setError(message);
     } finally {
       setLoading(false);

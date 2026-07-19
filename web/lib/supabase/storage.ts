@@ -54,25 +54,34 @@ class SupabaseStorage {
 
   async flush() {
     if (this.cleanup || !supabase) return;
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    if (!userId) return;
-    const { data: profile } = await supabase.from("profiles").select("school_id").eq("id", userId).single();
-    const schoolId = (profile as { school_id?: string })?.school_id ?? "";
-    for (const [key, value] of this.batch) {
-      const table = this.keyToTable(key);
-      if (!table) continue;
-      try {
-        await supabase.from(table).upsert({ ...value, school_id: schoolId, teacher_id: userId, updated_at: new Date().toISOString() });
-        await createAuditLog({
-          school_id: schoolId,
-          user_id: userId,
-          action: "update",
-          table_name: table,
-          record_id: (value as Record<string, unknown>).id as string ?? key,
-          new_data: value as Record<string, unknown>,
-        });
-      } catch { /* silent */ }
-    }
+    try {
+      const userData = await supabase.auth.getUser();
+      const userId = userData.data.user?.id;
+      if (!userId) return;
+      const { data: profile } = await supabase.from("profiles").select("school_id").eq("id", userId).single();
+      const schoolId = (profile as { school_id?: string })?.school_id ?? "";
+      for (const [key, value] of this.batch) {
+        const table = this.keyToTable(key);
+        if (!table) continue;
+        // Only process if value is a non-null object (not array)
+        if (value != null && typeof value === 'object' && !Array.isArray(value)) {
+          try {
+            await supabase.from(table).upsert({ ...value, school_id: schoolId, teacher_id: userId, updated_at: new Date().toISOString() });
+            await createAuditLog({
+              school_id: schoolId,
+              user_id: userId,
+              action: "update",
+              table_name: table,
+              record_id: (value as Record<string, unknown>).id as string ?? key,
+              new_data: value as Record<string, unknown>,
+              old_data: null,
+              ip_address: null,
+              user_agent: null
+            });
+          } catch { /* silent */ }
+        }
+      }
+    } catch { /* silent */ }
     this.batch.clear();
   }
 

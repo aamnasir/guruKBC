@@ -19,7 +19,7 @@ export function useAutoSave<T>(
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const update = useCallback((updater: T | ((prev: T) => T)) => {
     setData((prev) => {

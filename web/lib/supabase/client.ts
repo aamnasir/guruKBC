@@ -1,13 +1,16 @@
-// lib/supabase/client.ts
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Jika environment variable tidak ada, kasih pesan error yang jelas
+// Deklarasikan variabel di top-level menggunakan let atau const
+let supabaseClientInstance: SupabaseClient | null = null;
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Next.js environment variables for Supabase. Pastikan .env.local ada dan server di-restart.');
+  console.warn('Supabase environment variables are missing. Supabase client is disabled.');
+} else {
+  supabaseClientInstance = createClient(supabaseUrl, supabaseAnonKey);
 }
 
-// INI BAGIAN PENTING YANG HARUS ADA:
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Lakukan export variabel di tingkat paling luar file
+export const supabase = supabaseClientInstance;

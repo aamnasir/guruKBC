@@ -13,7 +13,7 @@ type KktpData = { criteria?: Criterion[] };
 type Question = { id: string; prompt: string; score: number };
 type Assessment = { objectiveId: string; title: string; phase: string; technique: string; questions: Question[] };
 
-function readStorage<T>(key: string): Promise<T> { return storage.getItem<T>(key); }
+function readStorage<T>(key: string): T { return storage.getItem<T>(key); }
 function validObjectives(value: ProtaData["objectives"]): Objective[] { return Array.isArray(value) ? value.filter((item): item is Objective => Boolean(item?.id && item.code && item.description && (item.semester === 1 || item.semester === 2))) : []; }
 
 export default function AssessmentPage() {
@@ -25,8 +25,8 @@ export default function AssessmentPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    readStorage<ProtaData>("gurukbc-prota").then((data) => setProta(data));
-    readStorage<KktpData>("gurukbc-kktp").then((data) => setKktp(data));
+    setProta(readStorage<ProtaData>("gurukbc-prota"));
+    setKktp(readStorage<KktpData>("gurukbc-kktp"));
   }, []);
 
   const selectedObjective = objectives.find((item) => item.id === assessment.objectiveId);
@@ -37,7 +37,7 @@ export default function AssessmentPage() {
   const selectObjective = (objectiveId: string) => { const objective = objectives.find((item) => item.id === objectiveId); const linkedCriterion = criteria.find((item) => item.objectiveId === objectiveId); setAssessment((current) => ({ ...current, objectiveId, title: objective ? `Asesmen ${objective.code}` : current.title, technique: linkedCriterion?.technique ?? current.technique })); setSaved(false); };
   const addQuestion = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const data = new FormData(event.currentTarget); const prompt = String(data.get("prompt")).trim(); const score = Math.max(1, Number(data.get("score"))); if (!prompt) return; setAssessment((current) => ({ ...current, questions: [...current.questions, { id: crypto.randomUUID(), prompt, score }] })); setSaved(false); event.currentTarget.reset(); };
   const removeQuestion = (id: string) => { setAssessment((current) => ({ ...current, questions: current.questions.filter((item) => item.id !== id) })); setSaved(false); };
-  const saveAssessment = async () => { if (!hasPrerequisites || !assessment.title.trim() || assessment.questions.length === 0) return; const existing = await readStorage<{ assessments?: Assessment[] }>("gurukbc-assessments"); const assessments = [...(existing.assessments ?? []).filter((item) => item.objectiveId !== assessment.objectiveId), assessment]; await storage.setItem("gurukbc-assessments", { meta: prota.meta, assessments, updatedAt: new Date().toISOString() }); setSaved(true); };
+  const saveAssessment = () => { if (!hasPrerequisites || !assessment.title.trim() || assessment.questions.length === 0) return; const existing = readStorage<{ assessments?: Assessment[] }>("gurukbc-assessments"); const assessments = [...(existing.assessments ?? []).filter((item) => item.objectiveId !== assessment.objectiveId), assessment]; storage.setItem("gurukbc-assessments", { meta: prota.meta, assessments, updatedAt: new Date().toISOString() }); setSaved(true); };
   return <AppShell><PageHeader eyebrow="PERENCANAAN / ASESMEN" title="Instrumen Asesmen" description="Susun pertanyaan dan rubrik asesmen yang sesuai dengan KKTP." action={<div className={styles.actions}><button className={`button ${styles.secondary}`} onClick={() => window.print()} disabled={!hasPrerequisites}>Cetak / PDF</button><button className="button button-primary" onClick={saveAssessment} disabled={!hasPrerequisites || assessment.questions.length === 0}>Simpan Asesmen</button></div>} />
     {!hasPrerequisites ? <section className={`empty-state ${styles.notice}`}><h2>Data TP atau KKTP belum tersedia.</h2><p>Simpan PROTA dan KKTP terlebih dahulu untuk membuat instrumen asesmen yang terhubung.</p></section> : <section className={styles.layout}><div className={styles.editor}><section className="form-panel"><h2 className={styles.title}>Identitas asesmen</h2><div className="form-grid"><label className="full">Tujuan pembelajaran<select value={assessment.objectiveId} onChange={(event) => selectObjective(event.target.value)}>{objectives.map((item) => <option value={item.id} key={item.id}>{item.code} — {item.description}</option>)}</select></label><label className="full">Judul asesmen<input value={assessment.title} onChange={(event) => update("title", event.target.value)} /></label><label>Jenis asesmen<select value={assessment.phase} onChange={(event) => update("phase", event.target.value)}><option>Formatif</option><option>Sumatif</option><option>Diagnostik</option></select></label><label>Teknik asesmen<select value={assessment.technique} onChange={(event) => update("technique", event.target.value)}><option>Tes tertulis</option><option>Observasi</option><option>Unjuk kerja</option><option>Proyek</option><option>Portofolio</option></select></label></div></section>
       <form className={`form-panel ${styles.questionForm}`} onSubmit={addQuestion}><h2 className={styles.title}>Tambah butir instrumen</h2><div className="form-grid"><label className="full">Pertanyaan atau tugas<textarea name="prompt" rows={3} required placeholder="Tuliskan pertanyaan, instruksi tugas, atau indikator observasi" /></label><label>Bobot nilai<input name="score" type="number" min="1" defaultValue="10" required /></label></div><button className={`button ${styles.secondary}`}>Tambah butir</button></form>

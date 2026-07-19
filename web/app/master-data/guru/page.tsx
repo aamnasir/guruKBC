@@ -19,8 +19,14 @@ export default function TeacherPage() {
 
   useEffect(() => {
     const stored = storage.getItem<typeof form>("gurukbc-profile");
-    if (stored && Object.keys(stored).length) setForm(stored);
-  }, []);
+    if (stored && Object.keys(stored).length) {
+      // Only update if there's actual change to avoid unnecessary re-renders
+      const hasChanges = JSON.stringify(stored) !== JSON.stringify(form);
+      if (hasChanges) {
+        setForm((current) => ({ ...current, ...stored }));
+      }
+    }
+  }, [form]);
 
   const save = async () => {
     await storage.setItem("gurukbc-profile", form);

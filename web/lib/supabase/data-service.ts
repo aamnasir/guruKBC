@@ -49,7 +49,7 @@ class DataService {
     if (!table || !supabase) return;
     const userId = (await supabase.auth.getUser()).data.user?.id;
     if (!userId) return;
-    const schoolId = this.getSchoolId(userId);
+    const schoolId = await this.getSchoolId(userId);
     const payload = { ...value, school_id: schoolId, teacher_id: userId, updated_at: new Date().toISOString() };
     await supabase.from(table).upsert(payload);
     await createAuditLog({
@@ -59,6 +59,9 @@ class DataService {
       table_name: table,
       record_id: (value as Record<string, unknown>).id as string ?? "",
       new_data: payload,
+      old_data: null,
+      ip_address: null,
+      user_agent: null
     });
   }
 
@@ -83,10 +86,11 @@ class DataService {
     return map[key] ?? null;
   }
 
-  private async getSchoolId(userId: string): Promise<string> {
-    const { data } = await supabase!.from("profiles").select("school_id").eq("id", userId).single();
+private async getSchoolId(userId: string): Promise<string> {
+    if (!supabase) return "";
+    const { data } = await supabase.from("profiles").select("school_id").eq("id", userId).single();
     return (data as Profile)?.school_id ?? "";
-  }
+}
 }
 
 export const dataService = new DataService();

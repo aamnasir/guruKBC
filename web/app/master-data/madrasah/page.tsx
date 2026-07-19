@@ -10,7 +10,9 @@ export default function SchoolPage() {
 
   useEffect(() => {
     const stored = storage.getItem<typeof form>("gurukbc-school");
-    if (stored && Object.keys(stored).length) setForm(stored);
+    if (stored && Object.keys(stored).length) {
+      setForm((current) => ({ ...current, ...stored }));
+    }
   }, []);
 
   const save = async () => {
