@@ -439,9 +439,10 @@ export function subscribeToTable<T>(
   return { unsubscribe: () => supabase.removeChannel(channel) };
 }
 
-export function subscribeToProfile(callback: (profile: Profile | null) => void) {
+export async function subscribeToProfile(callback: (profile: Profile | null) => void) {
+  const userId = (await getUser())?.id;
   return subscribeToTable<Profile>("profiles", (payload) => {
     if (payload.eventType === "UPDATE" || payload.eventType === "INSERT") callback(payload.new as Profile);
     else if (payload.eventType === "DELETE") callback(null);
-  }, `id=eq.${(await getUser())?.id}`);
+  }, `id=eq.${userId}`);
 }
