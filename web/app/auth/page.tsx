@@ -18,16 +18,17 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const isConfigured = Boolean(supabase);
 
-  useEffect(() => {
-    console.log("supabase client:", supabase);
-    if (!supabase) {
-      console.error("Supabase client is null. Check environment variables.");
-      return;
-    }
-    supabase?.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = "/";
-    });
-  }, []);
+ useEffect(() => {
+  if (!supabase) return;
+
+  const checkSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) window.location.href = "/";
+  };
+
+  checkSession();
+}, []);
+
 
   const handleSubmit = async (event: React.FormEvent) => {
     console.log("handleSubmit called, mode:", mode, "email:", email);

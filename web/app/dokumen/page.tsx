@@ -353,7 +353,7 @@ export default function DocumentsPage() {
     if (!user?.id) return;
     void getGeneratedDocuments(user.id).then(({ data, error }) => {
       if (error || !data?.length) return;
-      const remoteEntries: ArchiveEntry[] = data.map((entry) => ({
+      const remoteEntries: ArchiveEntry[] = data.map((entry: { id: any; source_id: any; version: any; created_at: any; data: any; label: any; }) => ({
         id: entry.id,
         sourceId: entry.source_id,
         version: entry.version,
@@ -388,9 +388,9 @@ export default function DocumentsPage() {
     storage.setItem(archiveKey, { entries: next });
     setArchive(next);
 
-    if (!user?.school_id) return;
+    if (!user?.user_metadata?.school_id) return;
     const { data, error } = await createGeneratedDocument({
-      school_id: user.school_id,
+      school_id: user.user_metadata?.school_id,
       teacher_id: user.id,
       source_type: source.type,
       source_id: source.id,

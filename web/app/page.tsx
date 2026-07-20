@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { AppShell } from "@/app/components/AppShell";
 import { PageHeader } from "@/app/components/PageHeader";
@@ -7,6 +6,6 @@ import { useAuth } from "@/lib/supabase/AuthContext";
 const progress = [["Profil guru", "Selesai", "done"], ["Profil madrasah", "Selesai", "done"], ["Tahun pelajaran & kelas", "Perlu dilengkapi", "current"], ["Kalender akademik", "Belum dimulai", ""], ["Perangkat pembelajaran", "Menunggu data dasar", ""]];
 export default function DashboardPage() {
   const { user } = useAuth();
-  const name = user?.full_name?.split(" ")[0] ?? "Guru";
+  const name = user?.user_metadata?.full_name?.split(" ")[0] ?? "Guru";
   return <AppShell><PageHeader title={`Selamat datang, ${name}`} description="Selesaikan data dasar terlebih dahulu agar perangkat pembelajaran dapat dibuat otomatis." action={<Link href="/master-data" className="button button-primary">Lengkapi data</Link>} /><section className="stats-grid" aria-label="Ringkasan"><article className="stat-card"><span>PROGRES ADMINISTRASI</span><strong>40%</strong><div className="progress"><i style={{ width: "40%" }} /></div><small>2 dari 5 tahap data dasar selesai</small></article><article className="stat-card"><span>DOKUMEN TERSIMPAN</span><strong>0</strong><small>Mulai dari kalender akademik Anda</small></article><article className="stat-card"><span>KELAS & MAPEL</span><strong>0</strong><small>Tambahkan penugasan mengajar</small></article></section><section className="content-grid"><article className="panel"><div className="panel-title"><div><h2>Checklist perangkat</h2><p>Alur kerja yang saling terhubung</p></div><Link href="/perencanaan">Lihat perencanaan →</Link></div><ol className="checklist">{progress.map(([label, status, state], index) => <li key={label}><span className={`step ${state}`}>{state === "done" ? "✓" : index + 1}</span><div><strong>{label}</strong><small>{status}</small></div></li>)}</ol></article><article className="panel quick-actions"><div className="panel-title"><div><h2>Mulai dari sini</h2><p>Data sekali, dipakai di semua dokumen.</p></div></div>{[["01", "Profil Guru", "Identitas, NIP/NUPTK, jabatan dan tanda tangan.", "/master-data/guru"], ["02", "Profil Madrasah", "Identitas sekolah, kepala madrasah, dan aset.", "/master-data/madrasah"], ["03", "Tahun Pelajaran & Kelas", "Menjadi dasar kalender dan perangkat ajar.", "/master-data"]].map(([number, title, detail, href]) => <Link href={href} className="action-card" key={title}><span>{number}</span><div><strong>{title}</strong><p>{detail}</p></div><b>→</b></Link>)}</article></section></AppShell>;
 }

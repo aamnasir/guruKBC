@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  // Biarkan kosong, Next.js otomatis menyinkronkan data dari panel Vercel
+  turbopack: {
+    // Menetapkan absolute path ke folder induk monorepo (guruKBC)
+    root: path.resolve(process.cwd(), ".."),
+  },
+  // Pertahankan konfigurasi esensial lainnya jika ada...
 };
 
 export default nextConfig;

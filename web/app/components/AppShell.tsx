@@ -14,7 +14,7 @@ const sections = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
-  const initials = (user?.full_name ?? "G").slice(0, 2).toUpperCase();
+const initials = ((user?.user_metadata?.full_name || user?.email || "G") as string).slice(0, 2).toUpperCase();
 
   return (
     <div className="app-shell">
@@ -25,9 +25,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="sidebar-footer">
           <span className="avatar">{initials}</span>
           <div>
-            <strong>{user?.full_name ?? "Guru"}</strong>
-            <small>{user?.position ?? "Guru Mata Pelajaran"}</small>
-            {user?.role && <small style={{ textTransform: "capitalize" }}>{user.role.replace("_", " ")}</small>}
+            <strong>{user?.user_metadata?.full_name ?? "Guru"}</strong>
+            <small>{user?.user_metadata?.position ?? "Guru Mata Pelajaran"}</small>
+            {user?.user_metadata?.role && <small style={{ textTransform: "capitalize" }}>{(user.user_metadata.role as string).replace("_", " ")}</small>}
             <button type="button" className="sign-out" onClick={signOut}>Keluar</button>
           </div>
         </div>
