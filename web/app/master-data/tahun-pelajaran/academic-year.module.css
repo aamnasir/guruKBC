@@ -1,0 +1,7 @@
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:-12px 0 20px}
+.summary article{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+.summary span{display:block;color:var(--muted);font-size:10px;font-weight:bold;letter-spacing:.7px}
+.summary strong{display:block;font-size:24px;margin:9px 0 5px}
+.summary small{color:var(--muted);font-size:12px}
+.error{color:#b34040;margin:16px 0 0;font-size:13px}
+@media(max-width:850px){.summary{grid-template-columns:1fr}}

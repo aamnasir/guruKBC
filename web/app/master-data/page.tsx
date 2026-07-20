@@ -7,8 +7,8 @@ import { PageHeader } from "@/app/components/PageHeader";
 const records = [
   ["Profil Guru", "Identitas dan data profesional", "/master-data/guru", "Lengkap"],
   ["Profil Madrasah", "Identitas institusi dan aset dokumen", "/master-data/madrasah", "Lengkap"],
-  ["Tahun Pelajaran", "Tahun aktif, semester, dan beban belajar", "#", "Belum diisi"],
-  ["Mata Pelajaran & Kelas", "Penugasan mengajar dan peserta didik", "#", "Belum diisi"]
+  ["Tahun Pelajaran", "Tahun aktif, semester, dan beban belajar", "/master-data/tahun-pelajaran", "Belum diisi"],
+  ["Mata Pelajaran & Kelas", "Penugasan mengajar dan peserta didik", "/master-data/mata-pelajaran", "Belum diisi"]
 ];
 
 export const dynamic = 'force-dynamic'; // <--- TAMBAHKAN INI
