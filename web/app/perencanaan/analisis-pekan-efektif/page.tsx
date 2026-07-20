@@ -26,8 +26,10 @@ export default function EffectiveWeeksPage() {
   const [saved, setSaved] = useState(false);
 
  useEffect(() => {
-  const data = storage.getItem<CalendarData>("gurukbc-academic-calendar");
-  if (data) setCalendar(data);
+  const data = storage.getItem<Partial<CalendarData>>("gurukbc-academic-calendar");
+  if (data && data.year) {
+    setCalendar((current) => ({ events: data.events ?? current.events, year: data.year ?? current.year }));
+  }
 }, []);
 
 

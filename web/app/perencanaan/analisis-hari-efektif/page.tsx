@@ -26,11 +26,11 @@ export default function EffectiveDaysPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-  // Ambil data secara langsung tanpa .then()
-  const data = storage.getItem<CalendarData>("gurukbc-academic-calendar");
-  if (data) setCalendar(data);
-}, []);
-
+    const data = storage.getItem<Partial<CalendarData>>("gurukbc-academic-calendar");
+    if (data && data.year) {
+      setCalendar((current) => ({ events: data.events ?? current.events, year: data.year ?? current.year }));
+    }
+  }, []);
 
   const rows = useMemo(() => calculate(calendar), [calendar]);
   const semesterOne = rows.filter((row) => row.semester === 1); const semesterTwo = rows.filter((row) => row.semester === 2);
