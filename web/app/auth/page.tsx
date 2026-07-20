@@ -120,6 +120,12 @@ export default function AuthPage() {
             <p>{mode === "signin" ? "Masukkan detail akun untuk melanjutkan." : "Isi data berikut untuk membuat akun guru."}</p>
           </div>
           <form onSubmit={handleSubmit} className={styles.authForm}>
+            {!isConfigured && (
+              <p className={styles.authError} role="alert">
+                Layanan autentikasi belum dikonfigurasi. Periksa environment variable
+                NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY di Vercel, lalu deploy ulang.
+              </p>
+            )}
             {error && <p className={styles.authError} role="alert">{error}</p>}
             {notice && <p className={styles.authNotice} role="status">{notice}</p>}
             {mode === "signup" && (
