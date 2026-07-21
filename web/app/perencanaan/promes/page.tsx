@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { AppShell } from "@/app/components/AppShell";
 import { PageHeader } from "@/app/components/PageHeader";
 import { storage } from "@/lib/supabase/storage";
+import { useSchoolAssets } from "@/lib/hooks/useSchoolAssets";
 import styles from "./promes.module.css";
 
 type Objective = { id: string; code: string; description: string; semester: 1 | 2; hours: number };
@@ -24,6 +25,7 @@ function distribute(objectives: Objective[], weeks: EffectiveWeek[]): { allocati
 }
 
 export default function PromesPage() {
+  const { logoUrl, signatureUrl, headmasterName } = useSchoolAssets();
   const [prota, setProta] = useState<ProtaData>({});
   const [analysis, setAnalysis] = useState<WeekData>({});
   const [saved, setSaved] = useState(false);
@@ -45,7 +47,7 @@ useEffect(() => {
     {!hasPrerequisites ? <section className={`empty-state ${styles.notice}`}><h2>Data PROTA atau Analisis Pekan Efektif belum tersedia.</h2><p>Simpan PROTA dan Analisis Pekan Efektif terlebih dahulu agar distribusi TP dapat dibuat otomatis.</p></section> : <><section className={styles.summary}><article><span>TUJUAN PEMBELAJARAN</span><strong>{objectives.length}</strong><small>Dari PROTA</small></article><article><span>PEKAN TERSEDIA</span><strong>{weeks.length}</strong><small>Dari Analisis Pekan Efektif</small></article><article><span>JP TERDISTRIBUSI</span><strong>{totalHours}</strong><small>Ke dalam PROMES</small></article></section>
       {result.unallocated.length > 0 && <section className={styles.warning}><strong>Alokasi belum mencukupi.</strong><span>{result.unallocated.map((item) => `${item.code} (${item.hours} JP)`).join(", ")} belum memperoleh pekan efektif. Sesuaikan PROTA atau Analisis Pekan Efektif.</span></section>}
       <div className={styles.tables}>{table(1)}{table(2)}</div>
-      <section className={styles.previewWrap}><p className={styles.previewLabel}>PRATINJAU A4</p><article className={styles.preview}><header><p>PROGRAM SEMESTER</p><h2>DEEP LEARNING KURIKULUM BERBASIS CINTA (KBC)</h2><span>Tahun Pelajaran {prota.meta?.year ?? "-"}</span></header><dl><div><dt>Mata Pelajaran</dt><dd>{prota.meta?.subject ?? "-"}</dd></div><div><dt>Kelas / Fase</dt><dd>{prota.meta?.className ?? "-"}</dd></div></dl><table><thead><tr><th>Semester</th><th>Pekan</th><th>Tujuan Pembelajaran</th><th>JP</th></tr></thead><tbody>{result.allocations.map((item, index) => <tr key={`${item.objectiveId}-${item.weekNumber}-${index}`}><td>{item.semester}</td><td>{item.weekNumber}</td><td><b>{item.code}</b><span>{item.description}</span></td><td>{item.hours}</td></tr>)}</tbody><tfoot><tr><td colSpan={3}>Jumlah JP</td><td>{totalHours}</td></tr></tfoot></table><footer><span>Mengetahui,<br />Kepala Madrasah</span><span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span></footer></article></section></>}
+      <section className={styles.previewWrap}><p className={styles.previewLabel}>PRATINJAU A4</p><article className={styles.preview}><header>{logoUrl && <img src={logoUrl} alt="Logo madrasah" className={styles.previewLogo} />}<p>PROGRAM SEMESTER</p><h2>DEEP LEARNING KURIKULUM BERBASIS CINTA (KBC)</h2><span>Tahun Pelajaran {prota.meta?.year ?? "-"}</span></header><dl><div><dt>Mata Pelajaran</dt><dd>{prota.meta?.subject ?? "-"}</dd></div><div><dt>Kelas / Fase</dt><dd>{prota.meta?.className ?? "-"}</dd></div></dl><table><thead><tr><th>Semester</th><th>Pekan</th><th>Tujuan Pembelajaran</th><th>JP</th></tr></thead><tbody>{result.allocations.map((item, index) => <tr key={`${item.objectiveId}-${item.weekNumber}-${index}`}><td>{item.semester}</td><td>{item.weekNumber}</td><td><b>{item.code}</b><span>{item.description}</span></td><td>{item.hours}</td></tr>)}</tbody><tfoot><tr><td colSpan={3}>Jumlah JP</td><td>{totalHours}</td></tr></tfoot></table><footer><span>Mengetahui,<br />{signatureUrl && <img src={signatureUrl} alt="Tanda tangan kepala madrasah" className={styles.previewSignature} />}Kepala Madrasah{headmasterName && <><br /><b>{headmasterName}</b></>}</span><span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span></footer></article></section></>}
     <p className={styles.saved}>{saved ? "PROMES tersimpan dan disinkronkan ke Supabase." : "Dokumen tersimpan lokal hingga Supabase dikonfigurasi."}</p>
   </AppShell>;
 }

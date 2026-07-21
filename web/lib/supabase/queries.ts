@@ -76,6 +76,53 @@ export async function getCurriculumBank(subjectName: string, phase: string) {
 }
 
 // ============================================
+// School Assets (logo & tanda tangan)
+// ============================================
+
+export async function getUserSchoolId(): Promise<string | null> {
+  if (!supabase) return null;
+  const user = await getUser();
+  if (!user) return null;
+  const { data } = await supabase.from("profiles").select("school_id").eq("id", user.id).single();
+  return (data as { school_id?: string } | null)?.school_id ?? null;
+}
+
+export async function getSchoolAssets(schoolId: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase.from("school_assets").select("*").eq("school_id", schoolId);
+}
+
+export async function upsertSchoolAsset(asset: Omit<SchoolAsset, "id" | "created_at" | "updated_at">) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase.from("school_assets").upsert(asset, { onConflict: "school_id,asset_type" }).select().single();
+}
+
+export async function deleteSchoolAsset(id: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase.from("school_assets").delete().eq("id", id);
+}
+
+export async function uploadSchoolAssetFile(schoolId: string, assetType: string, file: File) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  const ext = file.name.split(".").pop() || "png";
+  const path = `${schoolId}/${assetType}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("school-assets").upload(path, file, { upsert: true, contentType: file.type });
+  if (error) return { data: null, error };
+  const { data } = supabase.storage.from("school-assets").getPublicUrl(path);
+  return { data: { path, publicUrl: data.publicUrl }, error: null };
+}
+
+export function getSchoolAssetPublicUrl(path: string): string {
+  if (!supabase) return "";
+  return supabase.storage.from("school-assets").getPublicUrl(path).data.publicUrl;
+}
+
+export async function removeSchoolAssetFile(path: string) {
+  if (!supabase) return { error: new Error('Supabase client not initialized') };
+  return await supabase.storage.from("school-assets").remove([path]);
+}
+
+// ============================================
 // Realtime Subscriptions
 // ============================================
 

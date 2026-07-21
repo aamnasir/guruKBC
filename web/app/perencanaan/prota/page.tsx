@@ -5,6 +5,7 @@ import { AppShell } from "@/app/components/AppShell";
 import { PageHeader } from "@/app/components/PageHeader";
 import { storage } from "@/lib/supabase/storage";
 import { getCurriculumBank } from "@/lib/supabase/queries";
+import { useSchoolAssets } from "@/lib/hooks/useSchoolAssets";
 import type { CurriculumTheme } from "@/lib/supabase/types";
 import styles from "./prota.module.css";
 
@@ -19,6 +20,7 @@ function readProta(): ProtaData {
 }
 
 export default function ProtaPage() {
+  const { logoUrl, signatureUrl, headmasterName } = useSchoolAssets();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [meta, setMeta] = useState({ subject: "", classId: "", year: "2026/2027" });
   const [saved, setSaved] = useState(false);
@@ -283,6 +285,10 @@ export default function ProtaPage() {
           <p className={styles.previewLabel}>PRATINJAU A4</p>
           <article className={styles.preview}>
             <header>
+              {logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Logo madrasah" className={styles.previewLogo} />
+              )}
               <p>PROGRAM TAHUNAN</p>
               <h2>DEEP LEARNING KURIKULUM BERBASIS CINTA (KBC)</h2>
               <span>Tahun Pelajaran {meta.year}</span>
@@ -304,7 +310,15 @@ export default function ProtaPage() {
               <tfoot><tr><td colSpan={3}>Jumlah JP</td><td>{required.one + required.two}</td></tr></tfoot>
             </table>
             <footer>
-              <span>Mengetahui,<br />Kepala Madrasah</span>
+              <span>
+                Mengetahui,<br />
+                {signatureUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={signatureUrl} alt="Tanda tangan kepala madrasah" className={styles.previewSignature} />
+                )}
+                Kepala Madrasah
+                {headmasterName && <><br /><b>{headmasterName}</b></>}
+              </span>
               <span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span>
             </footer>
           </article>
