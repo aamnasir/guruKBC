@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { useAuth } from "@/lib/supabase/AuthContext";
+import { TrialBadge } from "./TrialBadge";
 
 const sections = [
   { label: "Dashboard", href: "/", icon: "⌂" },
@@ -28,6 +29,7 @@ const initials = ((user?.user_metadata?.full_name || user?.email || "G") as stri
             <strong>{user?.user_metadata?.full_name ?? "Guru"}</strong>
             <small>{user?.user_metadata?.position ?? "Guru Mata Pelajaran"}</small>
             {user?.user_metadata?.role && <small style={{ textTransform: "capitalize" }}>{(user.user_metadata.role as string).replace("_", " ")}</small>}
+            <TrialBadge />
             <button type="button" className="sign-out" onClick={signOut}>Keluar</button>
           </div>
         </div>

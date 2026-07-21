@@ -58,8 +58,8 @@ class SupabaseStorage {
       const userData = await supabase.auth.getUser();
       const userId = userData.data.user?.id;
       if (!userId) return;
-      const { data: profile } = await supabase.from("profiles").select("school_id").eq("id", userId).single();
-      const schoolId = (profile as { school_id?: string })?.school_id ?? "";
+      const { data: membership } = await supabase.from("school_memberships").select("school_id").eq("user_id", userId).order("joined_at", { ascending: true }).limit(1).maybeSingle();
+      const schoolId = (membership as { school_id?: string } | null)?.school_id ?? "";
       for (const [key, value] of this.batch) {
         const table = this.keyToTable(key);
         if (!table) continue;

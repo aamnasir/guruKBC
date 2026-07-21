@@ -6,6 +6,8 @@ import { PageHeader } from "@/app/components/PageHeader";
 import { storage } from "@/lib/supabase/storage";
 import { getCurriculumBank } from "@/lib/supabase/queries";
 import { useSchoolAssets } from "@/lib/hooks/useSchoolAssets";
+import { useSubscriptionGate } from "@/lib/hooks/useSubscriptionGate";
+import { UpgradeBlock } from "@/app/components/UpgradeBlock";
 import type { CurriculumTheme } from "@/lib/supabase/types";
 import styles from "./prota.module.css";
 
@@ -21,6 +23,7 @@ function readProta(): ProtaData {
 
 export default function ProtaPage() {
   const { logoUrl, signatureUrl, headmasterName } = useSchoolAssets();
+  const gate = useSubscriptionGate();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [meta, setMeta] = useState({ subject: "", classId: "", year: "2026/2027" });
   const [saved, setSaved] = useState(false);
@@ -117,11 +120,13 @@ export default function ProtaPage() {
     setSaved(false);
   }
 
-  const saveProta = () => {
+  const saveProta = async () => {
     if (!meta.subject.trim() || !meta.classId.trim() || objectives.length === 0) {
       setError("Lengkapi mata pelajaran, kelas, dan minimal satu tujuan pembelajaran.");
       return;
     }
+    const allowed = await gate.recordDocumentSave();
+    if (!allowed) { setError(""); return; }
     const enrichedMeta = { ...meta, className: selectedClass?.name ?? "", phase };
     storage.setItem("gurukbc-prota", { meta: enrichedMeta, objectives, updatedAt: new Date().toISOString() });
     setError("");
@@ -259,6 +264,8 @@ export default function ProtaPage() {
             </div>
             <button className={`button ${styles.secondary}`}>Tambah TP</button>
           </form>
+
+          <UpgradeBlock gate={gate} />
 
           <section className={`panel ${styles.allocation}`}>
             <div className="panel-title"><div><h2>Validasi alokasi JP</h2><p>Dibandingkan dengan Analisis Pekan Efektif.</p></div></div>

@@ -1,4 +1,7 @@
-export type ProfileRole = "admin" | "teacher" | "headmaster" | "super_admin";
+// Role sesungguhnya ada di kolom school_memberships.role (lihat schema.sql,
+// enum school_role) -- bukan pada tabel "profiles" yang sebenarnya tidak ada.
+// Nilai berikut disamakan persis dengan enum tsb agar tidak lagi berbeda.
+export type ProfileRole = "owner" | "admin" | "principal" | "teacher";
 
 export type Profile = {
   id: string;

@@ -14,6 +14,7 @@ import {
   removeSchoolAssetFile,
 } from "@/lib/supabase/queries";
 import type { SchoolAsset } from "@/lib/supabase/types";
+import { useUserRole } from "@/lib/hooks/useUserRole";
 import styles from "./assets.module.css";
 
 const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
@@ -26,6 +27,7 @@ const SLOTS: AssetSlot[] = [
 ];
 
 export default function SchoolAssetsPage() {
+  const { canManage } = useUserRole();
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [assets, setAssets] = useState<Record<string, SchoolAsset>>({});
@@ -128,12 +130,18 @@ export default function SchoolAssetsPage() {
                   )}
                 </div>
                 <div className={styles.actions}>
-                  <label className={`button ${styles.secondary}`}>
-                    {uploading === slot.type ? "Mengunggah..." : asset ? "Ganti file" : "Unggah file"}
-                    <input type="file" accept="image/png,image/jpeg" hidden onChange={(event) => handleUpload(slot.type, event)} disabled={uploading === slot.type} />
-                  </label>
-                  {asset && (
-                    <button type="button" className={styles.remove} onClick={() => handleRemove(slot.type)}>Hapus</button>
+                  {canManage ? (
+                    <>
+                      <label className={`button ${styles.secondary}`}>
+                        {uploading === slot.type ? "Mengunggah..." : asset ? "Ganti file" : "Unggah file"}
+                        <input type="file" accept="image/png,image/jpeg" hidden onChange={(event) => handleUpload(slot.type, event)} disabled={uploading === slot.type} />
+                      </label>
+                      {asset && (
+                        <button type="button" className={styles.remove} onClick={() => handleRemove(slot.type)}>Hapus</button>
+                      )}
+                    </>
+                  ) : (
+                    <small className={styles.readonly}>Hanya kepala madrasah/admin yang bisa mengubah aset ini.</small>
                   )}
                 </div>
               </section>

@@ -5,6 +5,8 @@ import { AppShell } from "@/app/components/AppShell";
 import { PageHeader } from "@/app/components/PageHeader";
 import { storage } from "@/lib/supabase/storage";
 import { useSchoolAssets } from "@/lib/hooks/useSchoolAssets";
+import { useSubscriptionGate } from "@/lib/hooks/useSubscriptionGate";
+import { UpgradeBlock } from "@/app/components/UpgradeBlock";
 import styles from "./promes.module.css";
 
 type Objective = { id: string; code: string; description: string; semester: 1 | 2; hours: number };
@@ -26,6 +28,7 @@ function distribute(objectives: Objective[], weeks: EffectiveWeek[]): { allocati
 
 export default function PromesPage() {
   const { logoUrl, signatureUrl, headmasterName } = useSchoolAssets();
+  const gate = useSubscriptionGate();
   const [prota, setProta] = useState<ProtaData>({});
   const [analysis, setAnalysis] = useState<WeekData>({});
   const [saved, setSaved] = useState(false);
@@ -40,10 +43,11 @@ useEffect(() => {
   const result = useMemo(() => distribute(objectives, weeks), [objectives, weeks]);
   const semesterRows = (semester: 1 | 2) => result.allocations.filter((item) => item.semester === semester);
   const totalHours = result.allocations.reduce((total, item) => total + item.hours, 0);
-  const savePromes = () => { if (!objectives.length || !weeks.length || result.unallocated.length) return; storage.setItem("gurukbc-promes", { meta: prota.meta, allocations: result.allocations, createdAt: new Date().toISOString() }); setSaved(true); };
+  const savePromes = async () => { if (!objectives.length || !weeks.length || result.unallocated.length) return; const allowed = await gate.recordDocumentSave(); if (!allowed) return; storage.setItem("gurukbc-promes", { meta: prota.meta, allocations: result.allocations, createdAt: new Date().toISOString() }); setSaved(true); };
   const table = (semester: 1 | 2) => <section className={`panel ${styles.tablePanel}`}><div className="panel-title"><div><h2>Semester {semester}</h2><p>{semesterRows(semester).length} distribusi TP pada pekan efektif.</p></div></div><div className={styles.tableWrap}><table><thead><tr><th>Pekan</th><th>Tujuan Pembelajaran</th><th>Alokasi JP</th></tr></thead><tbody>{semesterRows(semester).length === 0 ? <tr><td colSpan={3} className={styles.placeholder}>Belum ada alokasi semester {semester}.</td></tr> : semesterRows(semester).map((item, index) => <tr key={`${item.objectiveId}-${item.weekNumber}-${index}`}><td>{item.weekNumber}</td><td><b>{item.code}</b><span>{item.description}</span></td><td>{item.hours}</td></tr>)}</tbody></table></div></section>;
   const hasPrerequisites = objectives.length > 0 && weeks.length > 0;
   return <AppShell><PageHeader eyebrow="PERENCANAAN / PROMES" title="Program Semester (PROMES)" description="Distribusikan tujuan pembelajaran dari PROTA ke pekan efektif secara otomatis." action={<div className={styles.actions}><button className={`button ${styles.secondary}`} onClick={() => window.print()} disabled={!hasPrerequisites}>Cetak / PDF</button><button className="button button-primary" onClick={savePromes} disabled={!hasPrerequisites || result.unallocated.length > 0}>Simpan PROMES</button></div>} />
+    <UpgradeBlock gate={gate} />
     {!hasPrerequisites ? <section className={`empty-state ${styles.notice}`}><h2>Data PROTA atau Analisis Pekan Efektif belum tersedia.</h2><p>Simpan PROTA dan Analisis Pekan Efektif terlebih dahulu agar distribusi TP dapat dibuat otomatis.</p></section> : <><section className={styles.summary}><article><span>TUJUAN PEMBELAJARAN</span><strong>{objectives.length}</strong><small>Dari PROTA</small></article><article><span>PEKAN TERSEDIA</span><strong>{weeks.length}</strong><small>Dari Analisis Pekan Efektif</small></article><article><span>JP TERDISTRIBUSI</span><strong>{totalHours}</strong><small>Ke dalam PROMES</small></article></section>
       {result.unallocated.length > 0 && <section className={styles.warning}><strong>Alokasi belum mencukupi.</strong><span>{result.unallocated.map((item) => `${item.code} (${item.hours} JP)`).join(", ")} belum memperoleh pekan efektif. Sesuaikan PROTA atau Analisis Pekan Efektif.</span></section>}
       <div className={styles.tables}>{table(1)}{table(2)}</div>

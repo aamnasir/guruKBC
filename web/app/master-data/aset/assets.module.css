@@ -6,6 +6,7 @@
 .actions{display:flex;align-items:center;gap:12px}
 .secondary{color:var(--teal);background:var(--mint);cursor:pointer;display:inline-flex}
 .remove{border:0;background:transparent;color:#b34040;cursor:pointer;font:inherit;font-size:13px}
+.readonly{color:var(--muted)}
 .empty{display:grid;gap:6px;padding:32px 0;text-align:center;color:var(--muted);font-size:13px}
 .empty strong{color:var(--ink)}
 .error{color:#b34040;font-size:13px;margin:16px 0 0}

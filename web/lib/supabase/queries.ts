@@ -79,12 +79,24 @@ export async function getCurriculumBank(subjectName: string, phase: string) {
 // School Assets (logo & tanda tangan)
 // ============================================
 
-export async function getUserSchoolId(): Promise<string | null> {
+export async function getUserMembership(): Promise<{ schoolId: string; role: string } | null> {
   if (!supabase) return null;
   const user = await getUser();
   if (!user) return null;
-  const { data } = await supabase.from("profiles").select("school_id").eq("id", user.id).single();
-  return (data as { school_id?: string } | null)?.school_id ?? null;
+  const { data } = await supabase
+    .from("school_memberships")
+    .select("school_id, role")
+    .eq("user_id", user.id)
+    .order("joined_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+  return { schoolId: (data as { school_id: string }).school_id, role: (data as { role: string }).role };
+}
+
+export async function getUserSchoolId(): Promise<string | null> {
+  const membership = await getUserMembership();
+  return membership?.schoolId ?? null;
 }
 
 export async function getSchoolAssets(schoolId: string) {
@@ -120,6 +132,27 @@ export function getSchoolAssetPublicUrl(path: string): string {
 export async function removeSchoolAssetFile(path: string) {
   if (!supabase) return { error: new Error('Supabase client not initialized') };
   return await supabase.storage.from("school-assets").remove([path]);
+}
+
+// ============================================
+// Langganan / Freemium (uji coba 7 hari atau 5 dokumen)
+// ============================================
+
+export type SchoolSubscription = {
+  school_id: string;
+  plan: "free" | "pro";
+  trial_started_at: string;
+  documents_created: number;
+};
+
+export async function getSubscription(schoolId: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase.from("school_subscriptions").select("*").eq("school_id", schoolId).maybeSingle();
+}
+
+export async function incrementDocumentCount(schoolId: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase.rpc("increment_document_count", { target_school_id: schoolId });
 }
 
 // ============================================
