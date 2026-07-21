@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getUserSchoolId, getSubscription, incrementDocumentCount } from "@/lib/supabase/queries";
+import { getUser, getSubscription, incrementDocumentCount } from "@/lib/supabase/queries";
 
 const TRIAL_DAYS = 7;
 const DOCUMENT_LIMIT = 5;
@@ -16,19 +16,22 @@ export type SubscriptionGate = {
   recordDocumentSave: () => Promise<boolean>;
 };
 
+// Batas uji coba berlaku PER AKUN GURU, bukan per sekolah -- supaya
+// satu guru yang upgrade ke paket berbayar tidak membuat guru lain
+// di sekolah yang sama ikut premium.
 export function useSubscriptionGate(): SubscriptionGate {
   const [loading, setLoading] = useState(true);
-  const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
   const [plan, setPlan] = useState<"free" | "pro">("free");
   const [trialStartedAt, setTrialStartedAt] = useState<string | null>(null);
   const [documentsUsed, setDocumentsUsed] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const id = await getUserSchoolId();
-      setSchoolId(id);
-      if (id) {
-        const { data } = await getSubscription(id);
+      const user = await getUser();
+      setSignedIn(!!user);
+      if (user) {
+        const { data } = await getSubscription();
         if (data) {
           setPlan(data.plan);
           setTrialStartedAt(data.trial_started_at);
@@ -47,21 +50,21 @@ export function useSubscriptionGate(): SubscriptionGate {
   const reason: "trial_expired" | "quota_exceeded" | null = !blocked ? null : trialExpired ? "trial_expired" : "quota_exceeded";
 
   const recordDocumentSave = useCallback(async (): Promise<boolean> => {
-    if (!schoolId) return true; // Supabase belum dikonfigurasi -- jangan blokir pemakaian lokal
+    if (!signedIn) return true; // Supabase belum dikonfigurasi -- jangan blokir pemakaian lokal
     if (plan === "pro") return true;
     if (blocked) return false;
-    const { data } = await incrementDocumentCount(schoolId);
+    const { data } = await incrementDocumentCount();
     if (data) {
       setPlan(data.plan);
       setTrialStartedAt(data.trial_started_at);
       setDocumentsUsed(data.documents_created);
     }
     return true;
-  }, [schoolId, plan, blocked]);
+  }, [signedIn, plan, blocked]);
 
   return {
     loading,
-    configured: schoolId !== null,
+    configured: signedIn,
     plan,
     documentsUsed,
     documentsLimit: DOCUMENT_LIMIT,

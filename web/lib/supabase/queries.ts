@@ -138,21 +138,23 @@ export async function removeSchoolAssetFile(path: string) {
 // Langganan / Freemium (uji coba 7 hari atau 5 dokumen)
 // ============================================
 
-export type SchoolSubscription = {
-  school_id: string;
+export type UserSubscription = {
+  user_id: string;
   plan: "free" | "pro";
   trial_started_at: string;
   documents_created: number;
 };
 
-export async function getSubscription(schoolId: string) {
+export async function getSubscription() {
   if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
-  return await supabase.from("school_subscriptions").select("*").eq("school_id", schoolId).maybeSingle();
+  const user = await getUser();
+  if (!user) return { data: null, error: new Error('Belum masuk') };
+  return await supabase.from("user_subscriptions").select("*").eq("user_id", user.id).maybeSingle();
 }
 
-export async function incrementDocumentCount(schoolId: string) {
+export async function incrementDocumentCount() {
   if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
-  return await supabase.rpc("increment_document_count", { target_school_id: schoolId });
+  return await supabase.rpc("increment_document_count");
 }
 
 // ============================================

@@ -11,6 +11,7 @@ const sections = [
   { label: "Master Data", href: "/master-data", icon: "◫" },
   { label: "Perencanaan", href: "/perencanaan", icon: "◷" },
   { label: "Dokumen", href: "/dokumen", icon: "▤" },
+  { label: "Bantuan", href: "/bantuan", icon: "?" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
