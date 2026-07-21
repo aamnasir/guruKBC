@@ -248,3 +248,31 @@ export type DocumentTemplate = {
   created_at: string;
   updated_at: string;
 };
+
+// Bank Tema / Topik / Tujuan Pembelajaran Kurikulum Berbasis Cinta (KBC).
+// Data global (bukan per-sekolah), diisi lewat SQL Editor Supabase.
+export type CurriculumObjective = {
+  id: string;
+  topic_id: string;
+  code: string | null;
+  description: string;
+  sequence: number;
+};
+
+export type CurriculumTopic = {
+  id: string;
+  theme_id: string;
+  name: string;
+  sequence: number;
+  curriculum_objectives?: CurriculumObjective[];
+};
+
+export type CurriculumTheme = {
+  id: string;
+  subject_name: string;
+  phase: "A" | "B" | "C";
+  name: string;
+  sequence: number;
+  curriculum_topics?: CurriculumTopic[];
+};
+

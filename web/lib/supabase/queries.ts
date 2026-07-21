@@ -62,6 +62,20 @@ export async function createGeneratedDocument(doc: Omit<GeneratedDocument, "id" 
 }
 
 // ============================================
+// Bank Tema / Topik / TP (Kurikulum Berbasis Cinta)
+// ============================================
+
+export async function getCurriculumBank(subjectName: string, phase: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase
+    .from("curriculum_themes")
+    .select("id,subject_name,phase,name,sequence,curriculum_topics(id,theme_id,name,sequence,curriculum_objectives(id,topic_id,code,description,sequence))")
+    .eq("subject_name", subjectName)
+    .eq("phase", phase)
+    .order("sequence");
+}
+
+// ============================================
 // Realtime Subscriptions
 // ============================================
 
