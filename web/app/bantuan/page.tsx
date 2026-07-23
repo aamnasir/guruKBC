@@ -9,10 +9,10 @@ import styles from "./help.module.css";
 const CHECKLIST = [
   "Daftar & masuk akun",
   "Profil Guru terisi",
-  "Profil Madrasah terisi (Kepala Madrasah/Admin)",
+  "Profil Sekolah/Madrasah terisi (Kepala Sekolah/Madrasah/Admin)",
   "Tahun Pelajaran terisi",
   "Mata Pelajaran & Kelas dipilih dan disimpan",
-  "Logo & Tanda Tangan diunggah (Kepala Madrasah/Admin)",
+  "Logo & Tanda Tangan diunggah (Kepala Sekolah/Madrasah/Admin)",
   "Kalender Akademik diisi",
   "Analisis Hari Efektif disimpan",
   "Analisis Pekan Efektif disimpan",
@@ -53,7 +53,7 @@ export default function HelpPage() {
       <section className={`panel ${styles.flow}`}>
         <div className="panel-title"><div><h2>Alur kerja singkat</h2><p>Setiap tahap memakai data dari tahap sebelumnya secara otomatis.</p></div></div>
         <ol className={styles.flowList}>
-          <li><b>Master Data</b> — Profil Guru, Profil Madrasah, Tahun Pelajaran, Mata Pelajaran &amp; Kelas, Pengaturan Aset</li>
+          <li><b>Master Data</b> — Profil Guru, Profil Sekolah/Madrasah, Tahun Pelajaran, Mata Pelajaran &amp; Kelas, Pengaturan Aset</li>
           <li><b>Kalender &amp; Analisis</b> — Kalender Akademik → Analisis Hari Efektif → Analisis Pekan Efektif</li>
           <li><b>Perencanaan</b> — PROTA → PROMES → KKTP → Modul Ajar → Asesmen</li>
           <li><b>Dokumen</b> — Arsipkan, ekspor DOCX/PDF, cetak</li>
@@ -76,14 +76,14 @@ export default function HelpPage() {
         <p>Menu <b>Master Data</b> ada di sidebar kiri. Isi kelima kartu berikut secara berurutan.</p>
         <h3>2.1 Profil Guru</h3>
         <p>Identitas Anda sebagai guru: nama, NIP/NUPTK, pendidikan, jabatan. Muncul otomatis di kop dokumen.</p>
-        <h3>2.2 Profil Madrasah <span className={styles.tag}>Kepala Madrasah/Admin</span></h3>
-        <p>Nama madrasah, NPSN/NSM, nama Kepala Madrasah, alamat, email. Guru biasa hanya bisa melihat, tidak bisa mengubah.</p>
+        <h3>2.2 Profil Sekolah/Madrasah <span className={styles.tag}>Kepala Sekolah/Madrasah/Admin</span></h3>
+        <p>Nama sekolah/madrasah, NPSN/NSM, nama Kepala Sekolah/Madrasah, alamat, email. Guru biasa hanya bisa melihat, tidak bisa mengubah.</p>
         <h3>2.3 Tahun Pelajaran</h3>
         <p>Nama tahun pelajaran beserta tanggal tiap semester — acuan Kalender Akademik dan seluruh dokumen Perencanaan.</p>
         <h3>2.4 Mata Pelajaran &amp; Kelas</h3>
         <p><b>Mata Pelajaran</b>: tinggal centang dari daftar standar SD/MI — tidak perlu ketik manual. <b>Kelas &amp; Rombel</b>: tambahkan nama kelas dan pilih Fase-nya (A = kelas 1-2, B = kelas 3-4, C = kelas 5-6). Klik <b>&quot;Simpan data&quot;</b>.</p>
-        <h3>2.5 Pengaturan Aset <span className={styles.tag}>Kepala Madrasah/Admin</span></h3>
-        <p>Unggah Logo Madrasah dan Tanda Tangan Kepala Madrasah (PNG/JPG, maks. 2 MB). Otomatis muncul di semua dokumen — tidak perlu tempel manual satu-satu.</p>
+        <h3>2.5 Pengaturan Aset <span className={styles.tag}>Kepala Sekolah/Madrasah/Admin</span></h3>
+        <p>Unggah Logo Sekolah/Madrasah dan Tanda Tangan Kepala Sekolah/Madrasah (PNG/JPG, maks. 2 MB). Otomatis muncul di semua dokumen — tidak perlu tempel manual satu-satu.</p>
       </details>
 
       <details className={styles.section}>
@@ -131,13 +131,13 @@ export default function HelpPage() {
       <details className={styles.section}>
         <summary>6. Peran pengguna — siapa bisa apa</summary>
         <table className={styles.roleTable}>
-          <thead><tr><th>Peran</th><th>Master Data &amp; Perencanaan</th><th>Profil Madrasah &amp; Pengaturan Aset</th></tr></thead>
+          <thead><tr><th>Peran</th><th>Master Data &amp; Perencanaan</th><th>Profil Sekolah/Madrasah &amp; Pengaturan Aset</th></tr></thead>
           <tbody>
-            <tr><td>Kepala Madrasah / Owner / Admin</td><td>✅</td><td>✅</td></tr>
+            <tr><td>Kepala Sekolah/Madrasah / Owner / Admin</td><td>✅</td><td>✅</td></tr>
             <tr><td>Guru</td><td>✅</td><td>❌ (hanya lihat)</td></tr>
           </tbody>
         </table>
-        <p>Kalau Anda guru dan perlu logo/tanda tangan diunggah atau data madrasah diperbarui, sampaikan ke Kepala Madrasah atau Admin sekolah Anda.</p>
+        <p>Kalau Anda guru dan perlu logo/tanda tangan diunggah atau data sekolah/madrasah diperbarui, sampaikan ke Kepala Sekolah/Madrasah atau Admin sekolah Anda.</p>
       </details>
 
       <details className={styles.section}>

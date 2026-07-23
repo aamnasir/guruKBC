@@ -17,9 +17,25 @@ export async function getUser() {
   return user;
 }
 
-export async function signUp(email: string, password: string, fullName: string) {
+export async function signUp(
+  email: string,
+  password: string,
+  fullName: string,
+  pending?: { role: "principal" | "teacher"; schoolName?: string; joinCode?: string }
+) {
   if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
-  return await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+  return await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        pending_role: pending?.role ?? null,
+        pending_school_name: pending?.schoolName ?? null,
+        pending_join_code: pending?.joinCode ?? null,
+      },
+    },
+  });
 }
 
 export async function signIn(email: string, password: string) {
@@ -79,24 +95,93 @@ export async function getCurriculumBank(subjectName: string, phase: string) {
 // School Assets (logo & tanda tangan)
 // ============================================
 
+export async function createSchool(name: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase.rpc("create_school_and_become_admin", { school_name: name });
+}
+
+export async function joinSchoolByCode(code: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  const user = await getUser();
+  if (!user) return { data: null, error: new Error('Belum masuk') };
+
+  const { data: school, error: lookupError } = await supabase
+    .from("schools")
+    .select("id")
+    .eq("join_code", code.trim().toUpperCase())
+    .maybeSingle();
+  if (lookupError || !school) return { data: null, error: lookupError ?? new Error('Kode sekolah tidak ditemukan') };
+
+  return await supabase
+    .from("profiles")
+    .update({ school_id: (school as { id: string }).id, role: "teacher" })
+    .eq("id", user.id)
+    .select()
+    .single();
+}
+
+export type OnboardingResult =
+  | { status: "already_member" }
+  | { status: "no_pending" }
+  | { status: "created_school"; schoolId: string; joinCode: string }
+  | { status: "joined_school" }
+  | { status: "invalid_code" }
+  | { status: "error"; message: string };
+
+export async function completeOnboarding(): Promise<OnboardingResult> {
+  if (!supabase) return { status: "no_pending" };
+  const user = await getUser();
+  if (!user) return { status: "no_pending" };
+
+  const existing = await getUserMembership();
+  if (existing?.schoolId) return { status: "already_member" };
+
+  const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const pendingRole = metadata.pending_role as string | undefined;
+
+  if (pendingRole === "principal") {
+    const schoolName = (metadata.pending_school_name as string) || "";
+    if (!schoolName) return { status: "no_pending" };
+    const { data, error } = await createSchool(schoolName);
+    if (error || !data) return { status: "error", message: error?.message ?? "Gagal membuat sekolah" };
+    return { status: "created_school", schoolId: (data as { id: string }).id, joinCode: (data as { join_code: string }).join_code };
+  }
+
+  if (pendingRole === "teacher") {
+    const joinCode = (metadata.pending_join_code as string) || "";
+    if (!joinCode) return { status: "no_pending" };
+    const { data, error } = await joinSchoolByCode(joinCode);
+    if (error || !data) return { status: "invalid_code" };
+    return { status: "joined_school" };
+  }
+
+  return { status: "no_pending" };
+}
+
 export async function getUserMembership(): Promise<{ schoolId: string; role: string } | null> {
   if (!supabase) return null;
   const user = await getUser();
   if (!user) return null;
   const { data } = await supabase
-    .from("school_memberships")
+    .from("profiles")
     .select("school_id, role")
-    .eq("user_id", user.id)
-    .order("joined_at", { ascending: true })
-    .limit(1)
+    .eq("id", user.id)
     .maybeSingle();
-  if (!data) return null;
+  if (!data || !(data as { school_id: string | null }).school_id) return null;
   return { schoolId: (data as { school_id: string }).school_id, role: (data as { role: string }).role };
 }
 
+export async function getSchool(schoolId: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase.from("schools").select("*").eq("id", schoolId).maybeSingle();
+}
+
 export async function getUserSchoolId(): Promise<string | null> {
-  const membership = await getUserMembership();
-  return membership?.schoolId ?? null;
+  if (!supabase) return null;
+  const user = await getUser();
+  if (!user) return null;
+  const { data } = await supabase.from("profiles").select("school_id").eq("id", user.id).maybeSingle();
+  return (data as { school_id?: string } | null)?.school_id ?? null;
 }
 
 export async function getSchoolAssets(schoolId: string) {
@@ -155,6 +240,11 @@ export async function getSubscription() {
 export async function incrementDocumentCount() {
   if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
   return await supabase.rpc("increment_document_count");
+}
+
+export async function getSchoolSubscription(schoolId: string) {
+  if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
+  return await supabase.from("school_subscriptions").select("*").eq("school_id", schoolId).maybeSingle();
 }
 
 // ============================================

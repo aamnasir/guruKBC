@@ -1,0 +1,14 @@
+.statusBar{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.statusBar div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.statusBar span{display:block;color:var(--muted);font-size:11px;font-weight:bold;letter-spacing:.4px}
+.statusBar strong{display:block;font-size:15px;margin-top:6px}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.price{font-size:28px;font-weight:800;margin:6px 0 14px;color:var(--ink)}
+.price span{font-size:13px;font-weight:600;color:var(--muted)}
+.benefits{list-style:none;padding:0;margin:0 0 20px;display:grid;gap:8px;font-size:13.5px}
+.benefits li{padding-left:20px;position:relative}
+.benefits li::before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:bold}
+.hint{color:var(--muted);font-size:12.5px}
+.error{color:#b34040;font-size:13px;margin:0 0 16px}
+.notice{background:var(--mint);color:var(--teal);border-radius:8px;padding:10px 14px;font-size:13px;margin:0 0 16px}
+@media(max-width:850px){.statusBar,.plans{grid-template-columns:1fr}}

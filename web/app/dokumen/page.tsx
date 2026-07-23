@@ -45,7 +45,7 @@ function buildProtaPreview(data: Stored) {
         <span>Tahun Pelajaran {meta.year ?? "-"}</span>
       </header>
       <dl>
-        <div><dt>Satuan Pendidikan</dt><dd>Madrasah</dd></div>
+        <div><dt>Satuan Pendidikan</dt><dd>Sekolah/Madrasah</dd></div>
         <div><dt>Mata Pelajaran</dt><dd>{meta.subject ?? "-"}</dd></div>
         <div><dt>Kelas / Fase</dt><dd>{meta.grade ?? "-"}</dd></div>
       </dl>
@@ -68,7 +68,7 @@ function buildProtaPreview(data: Stored) {
         </tfoot>
       </table>
       <footer>
-        <span>Mengetahui,<br />Kepala Madrasah</span>
+        <span>Mengetahui,<br />Kepala Sekolah/Madrasah</span>
         <span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span>
       </footer>
     </article>
@@ -109,7 +109,7 @@ function buildPromesPreview(data: Stored) {
         </tfoot>
       </table>
       <footer>
-        <span>Mengetahui,<br />Kepala Madrasah</span>
+        <span>Mengetahui,<br />Kepala Sekolah/Madrasah</span>
         <span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span>
       </footer>
     </article>
@@ -147,7 +147,7 @@ function buildKktpPreview(data: Stored) {
         </tbody>
       </table>
       <footer>
-        <span>Mengetahui,<br />Kepala Madrasah</span>
+        <span>Mengetahui,<br />Kepala Sekolah/Madrasah</span>
         <span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span>
       </footer>
     </article>
@@ -182,7 +182,7 @@ function buildModulePreview(data: Stored) {
         </>
       ) : <p className={styles.placeholder}>Belum ada modul ajar.</p>}
       <footer>
-        <span>Mengetahui,<br />Kepala Madrasah</span>
+        <span>Mengetahui,<br />Kepala Sekolah/Madrasah</span>
         <span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span>
       </footer>
     </article>
@@ -213,7 +213,7 @@ function buildAssessmentPreview(data: Stored) {
         </ol>
       ) : <p className={styles.placeholder}>Belum ada butir asesmen.</p>}
       <footer>
-        <span>Mengetahui,<br />Kepala Madrasah</span>
+        <span>Mengetahui,<br />Kepala Sekolah/Madrasah</span>
         <span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span>
       </footer>
     </article>

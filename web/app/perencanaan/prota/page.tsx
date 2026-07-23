@@ -301,7 +301,7 @@ export default function ProtaPage() {
               <span>Tahun Pelajaran {meta.year}</span>
             </header>
             <dl>
-              <div><dt>Satuan Pendidikan</dt><dd>Madrasah</dd></div>
+              <div><dt>Satuan Pendidikan</dt><dd>Sekolah/Madrasah</dd></div>
               <div><dt>Mata Pelajaran</dt><dd>{meta.subject || "-"}</dd></div>
               <div><dt>Kelas / Fase</dt><dd>{selectedClass ? `${selectedClass.name}${selectedClass.phase ? ` (Fase ${selectedClass.phase})` : ""}` : "-"}</dd></div>
             </dl>
@@ -323,7 +323,7 @@ export default function ProtaPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={signatureUrl} alt="Tanda tangan kepala madrasah" className={styles.previewSignature} />
                 )}
-                Kepala Madrasah
+                Kepala Sekolah/Madrasah
                 {headmasterName && <><br /><b>{headmasterName}</b></>}
               </span>
               <span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}<br />Guru Mata Pelajaran</span>

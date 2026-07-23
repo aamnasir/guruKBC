@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getUserMembership } from "@/lib/supabase/queries";
 import type { ProfileRole } from "@/lib/supabase/types";
 
-const MANAGER_ROLES: ProfileRole[] = ["owner", "admin", "principal"];
+const MANAGER_ROLES: ProfileRole[] = ["admin", "super_admin", "owner", "principal"];
 
 export function useUserRole() {
   const [role, setRole] = useState<ProfileRole | null>(null);

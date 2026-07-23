@@ -5,12 +5,14 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import { useAuth } from "@/lib/supabase/AuthContext";
 import { TrialBadge } from "./TrialBadge";
+import { OnboardingBanner } from "./OnboardingBanner";
 
 const sections = [
   { label: "Dashboard", href: "/", icon: "⌂" },
   { label: "Master Data", href: "/master-data", icon: "◫" },
   { label: "Perencanaan", href: "/perencanaan", icon: "◷" },
   { label: "Dokumen", href: "/dokumen", icon: "▤" },
+  { label: "Langganan", href: "/langganan", icon: "★" },
   { label: "Bantuan", href: "/bantuan", icon: "?" },
 ];
 
@@ -35,7 +37,7 @@ const initials = ((user?.user_metadata?.full_name || user?.email || "G") as stri
           </div>
         </div>
       </aside>
-      <main className="main-content">{children}</main>
+      <main className="main-content"><OnboardingBanner />{children}</main>
     </div>
   );
 }

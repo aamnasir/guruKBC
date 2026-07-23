@@ -13,6 +13,9 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [signupRole, setSignupRole] = useState<"principal" | "teacher">("teacher");
+  const [schoolName, setSchoolName] = useState("");
+  const [joinCode, setJoinCode] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,8 +50,18 @@ export default function AuthPage() {
         if (error) throw error;
         window.location.href = "/";
       } else {
-        const { error } = await signUp(email, password, fullName);
+        if (signupRole === "principal" && !schoolName.trim()) { setError("Masukkan nama sekolah/madrasah."); setLoading(false); return; }
+        if (signupRole === "teacher" && !joinCode.trim()) { setError("Masukkan kode sekolah dari Kepala Sekolah/Madrasah/Admin Anda."); setLoading(false); return; }
+        const { data, error } = await signUp(email, password, fullName, {
+          role: signupRole,
+          schoolName: signupRole === "principal" ? schoolName.trim() : undefined,
+          joinCode: signupRole === "teacher" ? joinCode.trim() : undefined,
+        });
         if (error) throw error;
+        if (data?.session) {
+          window.location.href = "/";
+          return;
+        }
         setNotice("Pendaftaran berhasil. Periksa email Anda untuk memverifikasi akun sebelum masuk.");
         setMode("signin");
       }
@@ -129,10 +142,27 @@ export default function AuthPage() {
             {error && <p className={styles.authError} role="alert">{error}</p>}
             {notice && <p className={styles.authNotice} role="status">{notice}</p>}
             {mode === "signup" && (
-              <label>
-                Nama Lengkap
-                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Nama lengkap Anda" autoComplete="name" />
-              </label>
+              <>
+                <label>
+                  Nama Lengkap
+                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Nama lengkap Anda" autoComplete="name" />
+                </label>
+                <div className={styles.roleChoice}>
+                  <button type="button" className={signupRole === "teacher" ? styles.roleActive : ""} onClick={() => setSignupRole("teacher")}>Saya Guru</button>
+                  <button type="button" className={signupRole === "principal" ? styles.roleActive : ""} onClick={() => setSignupRole("principal")}>Saya Kepala Sekolah/Madrasah / Admin</button>
+                </div>
+                {signupRole === "principal" ? (
+                  <label>
+                    Nama Sekolah/Madrasah
+                    <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} required placeholder="Contoh: MI Nurul Ilmi" />
+                  </label>
+                ) : (
+                  <label>
+                    Kode Sekolah
+                    <input type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase())} required placeholder="Kode dari Kepala Sekolah/Madrasah/Admin" maxLength={6} />
+                  </label>
+                )}
+              </>
             )}
             <label>
               Email

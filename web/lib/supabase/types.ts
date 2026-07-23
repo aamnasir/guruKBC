@@ -1,7 +1,8 @@
-// Role sesungguhnya ada di kolom school_memberships.role (lihat schema.sql,
-// enum school_role) -- bukan pada tabel "profiles" yang sebenarnya tidak ada.
-// Nilai berikut disamakan persis dengan enum tsb agar tidak lagi berbeda.
-export type ProfileRole = "owner" | "admin" | "principal" | "teacher";
+// Role sesungguhnya ada di kolom profiles.role (teks bebas). Nilai yang
+// benar-benar dipakai di database: 'teacher' (default saat daftar) dan
+// 'admin' / 'super_admin' (pengelola sekolah). 'owner'/'principal'
+// disertakan sebagai alias yang aman kalau suatu saat dipakai juga.
+export type ProfileRole = "super_admin" | "admin" | "owner" | "principal" | "teacher";
 
 export type Profile = {
   id: string;

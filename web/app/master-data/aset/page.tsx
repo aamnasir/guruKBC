@@ -22,8 +22,8 @@ const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
 type AssetSlot = { type: "logo" | "signature"; label: string; hint: string };
 
 const SLOTS: AssetSlot[] = [
-  { type: "logo", label: "Logo Madrasah", hint: "Dipakai di kop surat dan pratinjau dokumen. Format PNG/JPG, latar transparan lebih baik." },
-  { type: "signature", label: "Tanda Tangan Kepala Madrasah", hint: "Dipakai pada bagian pengesahan dokumen (PROTA, PROMES, KKTP, Modul Ajar)." },
+  { type: "logo", label: "Logo Sekolah/Madrasah", hint: "Dipakai di kop surat dan pratinjau dokumen. Format PNG/JPG, latar transparan lebih baik." },
+  { type: "signature", label: "Tanda Tangan Kepala Sekolah/Madrasah", hint: "Dipakai pada bagian pengesahan dokumen (PROTA, PROMES, KKTP, Modul Ajar)." },
 ];
 
 export default function SchoolAssetsPage() {
@@ -105,7 +105,7 @@ export default function SchoolAssetsPage() {
       ) : !schoolId ? (
         <div className={styles.empty}>
           <strong>Profil madrasah belum lengkap.</strong>
-          <span>Lengkapi dulu di <a href="/master-data/madrasah">Master Data &raquo; Profil Madrasah</a> sebelum mengunggah aset.</span>
+          <span>Lengkapi dulu di <a href="/master-data/madrasah">Master Data &raquo; Profil Sekolah/Madrasah</a> sebelum mengunggah aset.</span>
         </div>
       ) : (
         <div className={styles.grid}>

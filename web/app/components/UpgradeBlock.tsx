@@ -28,13 +28,11 @@ export function UpgradeBlock({ gate }: { gate: SubscriptionGate }) {
         {message} Upgrade ke paket berbayar untuk membuat dokumen tanpa batas.
       </span>
       <a
-        href="https://wa.me/?text=Halo%2C%20saya%20mau%20upgrade%20akun%20GuruKBC%20saya%20ke%20paket%20berbayar."
-        target="_blank"
-        rel="noreferrer"
+        href="/langganan"
         className="button button-primary"
         style={{ justifySelf: "start", marginTop: 4 }}
       >
-        Hubungi kami untuk upgrade
+        Lihat paket upgrade
       </a>
     </div>
   );
