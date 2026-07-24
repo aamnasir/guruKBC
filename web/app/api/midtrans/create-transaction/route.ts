@@ -60,6 +60,15 @@ export async function POST(request: NextRequest) {
 
   const rawServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
   const keyFormat = rawServiceKey.startsWith("eyJ") ? "jwt-legacy" : rawServiceKey.startsWith("sb_secret_") ? "secret-new" : "unknown";
+  let jwtRole = "n/a";
+  if (keyFormat === "jwt-legacy") {
+    try {
+      const payload = JSON.parse(Buffer.from(rawServiceKey.split(".")[1], "base64").toString("utf8"));
+      jwtRole = payload.role ?? "unknown";
+    } catch {
+      jwtRole = "unreadable";
+    }
+  }
 
   const { error: insertError } = await admin.from("payment_orders").insert({
     order_id: orderId,
@@ -72,7 +81,7 @@ export async function POST(request: NextRequest) {
   if (insertError) {
     console.error("payment_orders insert error:", insertError);
     return NextResponse.json(
-      { error: `Gagal membuat pesanan pembayaran: ${insertError.message} [code=${insertError.code ?? "-"}, keyFormat=${keyFormat}] ${insertError.hint ?? insertError.details ?? ""}` },
+      { error: `Gagal membuat pesanan pembayaran: ${insertError.message} [code=${insertError.code ?? "-"}, keyFormat=${keyFormat}, jwtRole=${jwtRole}] ${insertError.hint ?? insertError.details ?? ""}` },
       { status: 500 }
     );
   }

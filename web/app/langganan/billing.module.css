@@ -11,4 +11,7 @@
 .hint{color:var(--muted);font-size:12.5px}
 .error{color:#b34040;font-size:13px;margin:0 0 16px}
 .notice{background:var(--mint);color:var(--teal);border-radius:8px;padding:10px 14px;font-size:13px;margin:0 0 16px}
+.manualBox{background:#fbfcfd;border:1px dashed var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:6px;font-size:13.5px}
+.manualBox p{margin:0}
+.manualBox a{justify-self:start;margin-top:6px}
 @media(max-width:850px){.statusBar,.plans{grid-template-columns:1fr}}

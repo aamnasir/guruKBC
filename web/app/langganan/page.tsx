@@ -3,9 +3,17 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/app/components/AppShell";
 import { PageHeader } from "@/app/components/PageHeader";
+import { useAuth } from "@/lib/supabase/AuthContext";
 import { useSubscriptionGate } from "@/lib/hooks/useSubscriptionGate";
 import { useUserRole } from "@/lib/hooks/useUserRole";
 import styles from "./billing.module.css";
+
+// Midtrans otomatis lagi diperbaiki -- sementara pembayaran manual transfer.
+// Set false untuk kembali menampilkan tombol "Bayar dengan Midtrans".
+const MANUAL_PAYMENT_MODE = true;
+
+const BANK_ACCOUNT = { bank: "BCA", number: "3781741246", name: "Aam Abdul Nasir" };
+const WHATSAPP_NUMBER = "6285930454719";
 
 declare global {
   interface Window {
@@ -38,7 +46,13 @@ function loadSnapScript(): Promise<void> {
   });
 }
 
+function whatsappLink(planLabel: string, price: string, email?: string) {
+  const message = `Halo, saya sudah transfer ${price} untuk upgrade paket ${planLabel} GuruKBC.\nEmail akun: ${email ?? "-"}\nMohon diaktifkan. Terima kasih.`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 export default function BillingPage() {
+  const { user } = useAuth();
   const gate = useSubscriptionGate();
   const { canManage } = useUserRole();
   const [paying, setPaying] = useState<"user" | "school" | null>(null);
@@ -46,7 +60,7 @@ export default function BillingPage() {
   const [status, setStatus] = useState("");
 
   useEffect(() => {
-    loadSnapScript().catch(() => {});
+    if (!MANUAL_PAYMENT_MODE) loadSnapScript().catch(() => {});
   }, []);
 
   async function pay(targetType: "user" | "school") {
@@ -91,6 +105,12 @@ export default function BillingPage() {
       {error && <p className={styles.error} role="alert">{error}</p>}
       {status && <p className={styles.notice}>{status}</p>}
 
+      {MANUAL_PAYMENT_MODE && (
+        <p className={styles.notice}>
+          Pembayaran otomatis sedang dalam perbaikan. Sementara ini, transfer manual ke rekening di bawah lalu konfirmasi via WhatsApp — akun Anda akan diaktifkan begitu pembayaran kami terima.
+        </p>
+      )}
+
       <div className={styles.plans}>
         <section className="panel">
           <div className="panel-title"><div><h2>Guru</h2><p>Upgrade untuk akun Anda sendiri.</p></div></div>
@@ -100,9 +120,21 @@ export default function BillingPage() {
             <li>Tidak ada batas waktu uji coba</li>
             <li>Hanya berlaku untuk akun Anda</li>
           </ul>
-          <button className="button button-primary" onClick={() => pay("user")} disabled={paying !== null || gate.plan === "pro"}>
-            {gate.plan === "pro" ? "Sudah aktif" : paying === "user" ? "Memproses..." : "Bayar dengan Midtrans"}
-          </button>
+          {gate.plan === "pro" ? (
+            <button className="button button-primary" disabled>Sudah aktif</button>
+          ) : MANUAL_PAYMENT_MODE ? (
+            <div className={styles.manualBox}>
+              <p><b>Transfer ke:</b> {BANK_ACCOUNT.bank} {BANK_ACCOUNT.number} a.n. {BANK_ACCOUNT.name}</p>
+              <p><b>Nominal:</b> Rp 99.000</p>
+              <a className="button button-primary" href={whatsappLink("Guru (Rp99.000/tahun)", "Rp99.000", user?.email)} target="_blank" rel="noreferrer">
+                Konfirmasi via WhatsApp
+              </a>
+            </div>
+          ) : (
+            <button className="button button-primary" onClick={() => pay("user")} disabled={paying !== null}>
+              {paying === "user" ? "Memproses..." : "Bayar dengan Midtrans"}
+            </button>
+          )}
         </section>
 
         <section className="panel">
@@ -113,12 +145,22 @@ export default function BillingPage() {
             <li>Cocok dianggarkan dari dana BOS/yayasan</li>
             <li>Hanya Kepala Sekolah/Madrasah atau Admin yang bisa membeli</li>
           </ul>
-          {canManage ? (
-            <button className="button button-primary" onClick={() => pay("school")} disabled={paying !== null || gate.schoolPlan === "pro"}>
-              {gate.schoolPlan === "pro" ? "Sudah aktif" : paying === "school" ? "Memproses..." : "Bayar dengan Midtrans"}
-            </button>
-          ) : (
+          {!canManage ? (
             <p className={styles.hint}>Minta Kepala Sekolah/Madrasah atau Admin Anda yang melakukan pembelian ini.</p>
+          ) : gate.schoolPlan === "pro" ? (
+            <button className="button button-primary" disabled>Sudah aktif</button>
+          ) : MANUAL_PAYMENT_MODE ? (
+            <div className={styles.manualBox}>
+              <p><b>Transfer ke:</b> {BANK_ACCOUNT.bank} {BANK_ACCOUNT.number} a.n. {BANK_ACCOUNT.name}</p>
+              <p><b>Nominal:</b> Rp 2.000.000</p>
+              <a className="button button-primary" href={whatsappLink("Sekolah/Madrasah (Rp2.000.000/tahun)", "Rp2.000.000", user?.email)} target="_blank" rel="noreferrer">
+                Konfirmasi via WhatsApp
+              </a>
+            </div>
+          ) : (
+            <button className="button button-primary" onClick={() => pay("school")} disabled={paying !== null}>
+              {paying === "school" ? "Memproses..." : "Bayar dengan Midtrans"}
+            </button>
           )}
         </section>
       </div>
