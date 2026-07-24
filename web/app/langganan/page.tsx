@@ -94,7 +94,7 @@ export default function BillingPage() {
       <div className={styles.plans}>
         <section className="panel">
           <div className="panel-title"><div><h2>Guru</h2><p>Upgrade untuk akun Anda sendiri.</p></div></div>
-          <p className={styles.price}>Rp 50.000<span>/bulan</span></p>
+          <p className={styles.price}>Rp 99.000<span>/tahun</span></p>
           <ul className={styles.benefits}>
             <li>Dokumen tak terbatas</li>
             <li>Tidak ada batas waktu uji coba</li>
@@ -107,7 +107,7 @@ export default function BillingPage() {
 
         <section className="panel">
           <div className="panel-title"><div><h2>Sekolah/Madrasah</h2><p>Upgrade untuk seluruh guru di sekolah Anda sekaligus.</p></div></div>
-          <p className={styles.price}>Rp 500.000<span>/tahun</span></p>
+          <p className={styles.price}>Rp 2.000.000<span>/tahun</span></p>
           <ul className={styles.benefits}>
             <li>Semua guru di sekolah otomatis Pro</li>
             <li>Cocok dianggarkan dari dana BOS/yayasan</li>

@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/supabase/AuthContext";
+import { useUserRole } from "@/lib/hooks/useUserRole";
+import { storage } from "@/lib/supabase/storage";
 import { TrialBadge } from "./TrialBadge";
 import { OnboardingBanner } from "./OnboardingBanner";
 
@@ -18,7 +20,17 @@ const sections = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
-const initials = ((user?.user_metadata?.full_name || user?.email || "G") as string).slice(0, 2).toUpperCase();
+  const { role } = useUserRole();
+  const [profile, setProfile] = useState<{ full_name?: string; position?: string }>({});
+
+  useEffect(() => {
+    const stored = storage.getItem<{ full_name?: string; position?: string }>("gurukbc-profile");
+    if (stored && Object.keys(stored).length) setProfile(stored);
+  }, []);
+
+  const displayName = profile.full_name || (user?.user_metadata?.full_name as string) || "Guru";
+  const displayPosition = profile.position || (user?.user_metadata?.position as string) || "Guru Mata Pelajaran";
+  const initials = displayName.slice(0, 2).toUpperCase();
 
   return (
     <div className="app-shell">
@@ -29,9 +41,9 @@ const initials = ((user?.user_metadata?.full_name || user?.email || "G") as stri
         <div className="sidebar-footer">
           <span className="avatar">{initials}</span>
           <div>
-            <strong>{user?.user_metadata?.full_name ?? "Guru"}</strong>
-            <small>{user?.user_metadata?.position ?? "Guru Mata Pelajaran"}</small>
-            {user?.user_metadata?.role && <small style={{ textTransform: "capitalize" }}>{(user.user_metadata.role as string).replace("_", " ")}</small>}
+            <strong>{displayName}</strong>
+            <small>{displayPosition}</small>
+            {role && <small style={{ textTransform: "capitalize" }}>{role.replace("_", " ")}</small>}
             <TrialBadge />
             <button type="button" className="sign-out" onClick={signOut}>Keluar</button>
           </div>

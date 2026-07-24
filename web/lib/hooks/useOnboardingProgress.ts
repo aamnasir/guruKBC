@@ -44,8 +44,10 @@ export function useOnboardingProgress(): OnboardingProgress {
   const [state, setState] = useState<OnboardingProgress>(EMPTY_PROGRESS);
 
   useEffect(() => {
-    const profile = storage.getItem<Partial<{ full_name: string }>>("gurukbc-profile");
-    const guru: StepStatus = profile?.full_name?.trim() ? "done" : "empty";
+    const profile = storage.getItem<Partial<{ full_name: string; nip_nuptk: string; email: string; phone: string; education: string; position: string }>>("gurukbc-profile");
+    const guruFields = [profile?.full_name, profile?.nip_nuptk, profile?.email, profile?.phone, profile?.education, profile?.position];
+    const guruFilled = guruFields.filter((value) => value && value.trim()).length;
+    const guru: StepStatus = guruFilled === 0 ? "empty" : guruFilled === guruFields.length ? "done" : "progress";
 
     const school = storage.getItem<Partial<{ name: string }>>("gurukbc-school");
     const sekolah: StepStatus = school?.name?.trim() ? "done" : "empty";
