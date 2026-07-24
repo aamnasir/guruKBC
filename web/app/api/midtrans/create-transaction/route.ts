@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const rawServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  const keyFormat = rawServiceKey.startsWith("eyJ") ? "jwt-legacy" : rawServiceKey.startsWith("sb_secret_") ? "secret-new" : "unknown";
+
   const { error: insertError } = await admin.from("payment_orders").insert({
     order_id: orderId,
     target_type: targetType,
@@ -68,7 +71,10 @@ export async function POST(request: NextRequest) {
   });
   if (insertError) {
     console.error("payment_orders insert error:", insertError);
-    return NextResponse.json({ error: `Gagal membuat pesanan pembayaran: ${insertError.message}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `Gagal membuat pesanan pembayaran: ${insertError.message} [code=${insertError.code ?? "-"}, keyFormat=${keyFormat}] ${insertError.hint ?? insertError.details ?? ""}` },
+      { status: 500 }
+    );
   }
 
   const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
